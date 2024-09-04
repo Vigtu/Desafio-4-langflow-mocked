@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, Camera, Loader2, ArrowRight, User, Lock, Mail, Palette, Shirt, Watch, Info, Sun, Snowflake, Leaf, Cloud, ChevronUp, ChevronDown, DollarSign, Eye, ShoppingBag } from 'lucide-react'
+import { Upload, Camera, Loader2, ArrowRight, User, Lock, Mail, Palette, Shirt, Watch, Info, Sun, Snowflake, Leaf, Cloud, ChevronUp, ChevronDown, DollarSign, Eye, ShoppingBag, Settings, Calendar, MapPin, Home, Palmtree, Umbrella, Building2, Mountain, Sunrise, Sunset, Clock, Wind, Dumbbell, Moon, Music, Briefcase, Coffee, Droplets } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -96,6 +96,8 @@ export default function StyleflowApp() {
   const [preferencesComplete, setPreferencesComplete] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [imageAnalysis, setImageAnalysis] = useState<string | null>(null)
+  const [showPreferences, setShowPreferences] = useState(false)
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isLoggedIn) {
@@ -111,6 +113,7 @@ export default function StyleflowApp() {
       // Upload the image to Bytescale
       const uploadResult = await uploadImageToBytescale(file);
       console.log('Image uploaded successfully:', uploadResult);
+      setUploadedImageUrl(uploadResult.fileUrl);
 
       // Analyze the uploaded image
       const analysisResult = await analyzeImage(uploadResult.fileUrl);
@@ -212,7 +215,7 @@ export default function StyleflowApp() {
   }
 
   const handlePreferencesSubmit = async () => {
-    setPreferencesComplete(true)
+    setPreferencesComplete(true);
     const filters = {
       priceRange,
       occasion,
@@ -225,7 +228,7 @@ export default function StyleflowApp() {
     try {
       const newRecommendations = await mockRecommendationAPI(colorAnalysis, filters);
       setRecommendations(newRecommendations);
-      setActiveTab('recommendations')
+      setActiveTab('recommendations');
       toast({
         title: "Preferências salvas",
         description: "Suas recomendações personalizadas estão prontas.",
@@ -480,35 +483,50 @@ export default function StyleflowApp() {
                       transition={{ delay: 0.2, duration: 0.5 }}
                     >
                       <Card className="p-4 aspect-square overflow-hidden transform rotate-3 shadow-md">
-                        <img src="/placeholder.svg" alt="Imagem do usuário enviada" className="w-full h-full object-cover" />
+                        {uploadedImageUrl ? (
+                          <img src={uploadedImageUrl} alt="Imagem do usuário enviada" className="w-full h-full object-cover" />
+                        ) : (
+                          <img src="/placeholder.svg" alt="Imagem do usuário enviada" className="w-full h-full object-cover" />
+                        )}
                       </Card>
                     </motion.div>
                     <motion.div
                       initial={{ opacity: 0, rotate: 5 }}
                       animate={{ opacity: 1, rotate: 0 }}
                       transition={{ delay: 0.4, duration: 0.5 }}
-                      className="flex flex-col justify-center"
+                      className="flex flex-col justify-center items-center"
                     >
-                      <h3 className="text-xl font-light mb-4 text-stone-800">Sua Paleta de Cores Personalizada</h3>
-                      <div className="flex flex-wrap justify-center gap-4 mb-4">
-                        {colorAnalysis.colorPalette.map((color: string, index: number) => (
-                          <TooltipProvider key={index}>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  className="w-12 h-12 rounded-full shadow-md hover:shadow-lg transition-shadow duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#d4af37]"
-                                  style={{ backgroundColor: color }}
-                                  aria-label={`Amostra de cor ${index + 1}`}
-                                />
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>Código da cor: {color}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                      <h3 className="text-xl font-light mb-4 text-stone-800">Suas Paletas de Cores Personalizadas</h3>
+                      <div className="space-y-6 w-full">
+                        {[
+                          { title: "Cores Neutras", colors: ["#F5E6D3", "#E6D7C3", "#D4C3B0"] },
+                          { title: "Cores Básicas", colors: ["#8FBC8F", "#7AA37A", "#658165"] },
+                          { title: "Cores de Destaque", colors: ["#D4AF37", "#BF9F33", "#AA8F2E"] },
+                        ].map((palette, index) => (
+                          <div key={index} className="mb-4 flex flex-col items-center">
+                            <h4 className="text-sm font-medium text-stone-700 mb-2">{palette.title}</h4>
+                            <div className="flex justify-center gap-4 w-full">
+                              {palette.colors.map((color, colorIndex) => (
+                                <TooltipProvider key={colorIndex}>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <button
+                                        className="w-12 h-12 rounded-full shadow-md hover:shadow-lg transition-shadow duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#d4af37]"
+                                        style={{ backgroundColor: color }}
+                                        aria-label={`${palette.title} cor ${colorIndex + 1}`}
+                                      />
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>Código da cor: {color}</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              ))}
+                            </div>
+                          </div>
                         ))}
                       </div>
-                      <p className="text-sm text-stone-600">Passe o mouse sobre uma cor para ver seu código</p>
+                      <p className="text-sm text-stone-600 mt-4">Passe o mouse sobre uma cor para ver seu código</p>
                     </motion.div>
                   </div>
                   <Card className="p-6 mb-8">
@@ -553,152 +571,270 @@ export default function StyleflowApp() {
         <TabsContent value="preferences">
           <Card className="p-8 bg-white shadow-lg rounded-2xl min-h-[calc(100vh-300px)]">
             <h2 className="text-3xl font-light mb-8 text-center text-stone-800">Preferências de Estilo</h2>
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="price">
-                <AccordionTrigger>Faixa de Preço</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <Label htmlFor="price-range" className="text-stone-700 mb-2 block">Faixa de Preço: R${priceRange[0]} - R${priceRange[1]}</Label>
-                    <Slider
-                      id="price-range"
-                      min={0}
-                      max={500}
-                      step={10}
-                      value={priceRange}
-                      onValueChange={setPriceRange}
-                      className="mb-4"
-                    />
-                    <div className="flex justify-between space-x-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setPriceRange([0, 50])}
-                        className="flex-1 bg-white hover:bg-[#f5e6d3] border-[#d4af37] text-stone-800"
-                      >
-                        <DollarSign className="w-4 h-4 mr-2" />
-                        Até R$50
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setPriceRange([50, 100])}
-                        className="flex-1 bg-white hover:bg-[#f5e6d3] border-[#d4af37] text-stone-800"
-                      >
-                        <DollarSign className="w-4 h-4 mr-2" />
-                        R$50-R$100
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setPriceRange([100, 500])}
-                        className="flex-1 bg-white hover:bg-[#f5e6d3] border-[#d4af37] text-stone-800"
-                      >
-                        <DollarSign className="w-4 h-4 mr-2" />
-                        Acima de R$100
-                      </Button>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="occasion">
-                <AccordionTrigger>Ocasião</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <Label htmlFor="occasion" className="text-stone-700">Ocasião</Label>
-                    <Select value={occasion} onValueChange={setOccasion}>
-                      <SelectTrigger id="occasion">
-                        <SelectValue placeholder="Selecione uma ocasião" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="casual">Casual</SelectItem>
-                        <SelectItem value="formal">Formal</SelectItem>
-                        <SelectItem value="sport">Esportivo</SelectItem>
-                        <SelectItem value="evening">Noite</SelectItem>
-                        <SelectItem value="party">Festa</SelectItem>
-                        <SelectItem value="work">Trabalho</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      id="detailed-occasion"
-                      placeholder="Especifique uma ocasião detalhada (ex: Primeiro Encontro, Reunião de Negócios)"
-                      value={detailedOccasion}
-                      onChange={(e) => setDetailedOccasion(e.target.value)}
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="location">
-                <AccordionTrigger>Localização</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <Label htmlFor="location" className="text-stone-700">Localização</Label>
-                    <Select value={location} onValueChange={setLocation}>
-                      <SelectTrigger id="location">
-                        <SelectValue placeholder="Selecione uma localização" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="indoor">Ambiente Interno</SelectItem>
-                        <SelectItem value="outdoor">Ambiente Externo</SelectItem>
-                        <SelectItem value="beach">Praia</SelectItem>
-                        <SelectItem value="city">Cidade</SelectItem>
-                        <SelectItem value="countryside">Campo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="weather">
-                <AccordionTrigger>Clima</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <Label htmlFor="weather" className="text-stone-700">Clima</Label>
-                    <Select value={weather} onValueChange={setWeather}>
-                      <SelectTrigger id="weather">
-                        <SelectValue placeholder="Selecione as condições climáticas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="warm">Quente</SelectItem>
-                        <SelectItem value="cold">Frio</SelectItem>
-                        <SelectItem value="humid">Úmido</SelectItem>
-                        <SelectItem value="dry">Seco</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-              <AccordionItem value="time">
-                <AccordionTrigger>Horário</AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-4">
-                    <Label htmlFor="time" className="text-stone-700">Horário do Dia</Label>
-                    <Select value={time} onValueChange={setTime}>
-                      <SelectTrigger id="time">
-                        <SelectValue placeholder="Selecione o horário do dia" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="morning">Manhã</SelectItem>
-                        <SelectItem value="afternoon">Tarde</SelectItem>
-                        <SelectItem value="evening">Noite</SelectItem>
-                        <SelectItem value="all-day">O Dia Todo</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Input
-                      id="exact-time"
-                      type="time"
-                      value={exactTime}
-                      onChange={(e) => setExactTime(e.target.value)}
-                      placeholder="Especifique um horário exato (opcional)"
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-            <div className="mt-8 flex justify-end">
-              <Button 
-                onClick={handlePreferencesSubmit} 
-                className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-8 py-3 text-lg rounded-full"
+            
+            <div className="flex justify-center space-x-4 mb-8">
+              <Button
+                onClick={() => setShowPreferences(true)}
+                className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
               >
-                Ver Recomendações
+                <Settings className="mr-2 h-5 w-5" />
+                Personalizar Minhas Preferências
+              </Button>
+              <Button
+                onClick={() => {
+                  setPreferencesComplete(true);
+                  setActiveTab('recommendations');
+                }}
+                className="bg-[#8fbc8f] hover:bg-[#7aa37a] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
+              >
+                Continuar e Ver Recomendações
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </div>
+
+            <AnimatePresence>
+              {showPreferences && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="price">
+                      <AccordionTrigger>
+                        <DollarSign className="w-5 h-5 mr-2" />
+                        Faixa de Preço
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-4">
+                          <Label htmlFor="price-range" className="text-stone-700 mb-2 block">
+                            Faixa de Preço: R${priceRange[0]} - R${priceRange[1]}
+                          </Label>
+                          <Slider
+                            id="price-range"
+                            min={0}
+                            max={500}
+                            step={10}
+                            value={priceRange}
+                            onValueChange={setPriceRange}
+                            className="mb-4"
+                          />
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="occasion">
+                      <AccordionTrigger>
+                        <Calendar className="w-5 h-5 mr-2" />
+                        Ocasião
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-4">
+                          <Label htmlFor="occasion" className="text-stone-700">Ocasião</Label>
+                          <Select value={occasion} onValueChange={setOccasion}>
+                            <SelectTrigger id="occasion">
+                              <SelectValue placeholder="Selecione uma ocasião" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="casual">
+                                <div className="flex items-center">
+                                  <Coffee className="w-4 h-4 mr-2" />
+                                  Casual
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="formal">
+                                <div className="flex items-center">
+                                  <Briefcase className="w-4 h-4 mr-2" />
+                                  Formal
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="sport">
+                                <div className="flex items-center">
+                                  <Dumbbell className="w-4 h-4 mr-2" />
+                                  Esportivo
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="evening">
+                                <div className="flex items-center">
+                                  <Moon className="w-4 h-4 mr-2" />
+                                  Noite
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="party">
+                                <div className="flex items-center">
+                                  <Music className="w-4 h-4 mr-2" />
+                                  Festa
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="work">
+                                <div className="flex items-center">
+                                  <Briefcase className="w-4 h-4 mr-2" />
+                                  Trabalho
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            id="detailed-occasion"
+                            placeholder="Especifique uma ocasião detalhada (ex: Primeiro Encontro, Reunião de Negócios)"
+                            value={detailedOccasion}
+                            onChange={(e) => setDetailedOccasion(e.target.value)}
+                          />
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="location">
+                      <AccordionTrigger>
+                        <MapPin className="w-5 h-5 mr-2" />
+                        Localização
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-4">
+                          <Label htmlFor="location" className="text-stone-700">Localização</Label>
+                          <Select value={location} onValueChange={setLocation}>
+                            <SelectTrigger id="location">
+                              <SelectValue placeholder="Selecione uma localização" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="indoor">
+                                <div className="flex items-center">
+                                  <Home className="w-4 h-4 mr-2" />
+                                  Ambiente Interno
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="outdoor">
+                                <div className="flex items-center">
+                                  <Palmtree className="w-4 h-4 mr-2" />
+                                  Ambiente Externo
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="beach">
+                                <div className="flex items-center">
+                                  <Umbrella className="w-4 h-4 mr-2" />
+                                  Praia
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="city">
+                                <div className="flex items-center">
+                                  <Building2 className="w-4 h-4 mr-2" />
+                                  Cidade
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="countryside">
+                                <div className="flex items-center">
+                                  <Mountain className="w-4 h-4 mr-2" />
+                                  Campo
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="weather">
+                      <AccordionTrigger>
+                        <Cloud className="w-5 h-5 mr-2" />
+                        Clima
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-4">
+                          <Label htmlFor="weather" className="text-stone-700">Clima</Label>
+                          <Select value={weather} onValueChange={setWeather}>
+                            <SelectTrigger id="weather">
+                              <SelectValue placeholder="Selecione as condições climáticas" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="warm">
+                                <div className="flex items-center">
+                                  <Sun className="w-4 h-4 mr-2" />
+                                  Quente
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="cold">
+                                <div className="flex items-center">
+                                  <Snowflake className="w-4 h-4 mr-2" />
+                                  Frio
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="humid">
+                                <div className="flex items-center">
+                                  <Droplets className="w-4 h-4 mr-2" />
+                                  Úmido
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="dry">
+                                <div className="flex items-center">
+                                  <Wind className="w-4 h-4 mr-2" />
+                                  Seco
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                    <AccordionItem value="time">
+                      <AccordionTrigger>
+                        <Clock className="w-5 h-5 mr-2" />
+                        Horário
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <div className="space-y-4">
+                          <Label htmlFor="time" className="text-stone-700">Horário do Dia</Label>
+                          <Select value={time} onValueChange={setTime}>
+                            <SelectTrigger id="time">
+                              <SelectValue placeholder="Selecione o horário do dia" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="morning">
+                                <div className="flex items-center">
+                                  <Sunrise className="w-4 h-4 mr-2" />
+                                  Manhã
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="afternoon">
+                                <div className="flex items-center">
+                                  <Sun className="w-4 h-4 mr-2" />
+                                  Tarde
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="evening">
+                                <div className="flex items-center">
+                                  <Sunset className="w-4 h-4 mr-2" />
+                                  Noite
+                                </div>
+                              </SelectItem>
+                              <SelectItem value="all-day">
+                                <div className="flex items-center">
+                                  <Clock className="w-4 h-4 mr-2" />
+                                  O Dia Todo
+                                </div>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            id="exact-time"
+                            type="time"
+                            value={exactTime}
+                            onChange={(e) => setExactTime(e.target.value)}
+                            placeholder="Especifique um horário exato (opcional)"
+                          />
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
+                  <div className="mt-8 flex justify-end">
+                    <Button 
+                      onClick={handlePreferencesSubmit} 
+                      className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-8 py-3 text-lg rounded-full"
+                    >
+                      Ver Recomendações
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Card>
         </TabsContent>
 
