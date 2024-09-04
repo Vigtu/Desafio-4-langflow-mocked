@@ -35,6 +35,8 @@ import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { toast } from "@/components/ui/use-toast"
+import { uploadImageToBytescale } from '../api/uploadImage'
+import { analyzeImage } from '../api/analyzeImage'
 
 // Mock API functions (replace with actual API calls in production)
 const mockColorAnalysisAPI = async (imageFile: File) => {
@@ -93,6 +95,7 @@ export default function StyleflowApp() {
   const [exactTime, setExactTime] = useState('')
   const [preferencesComplete, setPreferencesComplete] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [imageAnalysis, setImageAnalysis] = useState<string | null>(null)
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isLoggedIn) {
@@ -105,6 +108,15 @@ export default function StyleflowApp() {
 
     setIsUploading(true)
     try {
+      // Upload the image to Bytescale
+      const uploadResult = await uploadImageToBytescale(file);
+      console.log('Image uploaded successfully:', uploadResult);
+
+      // Analyze the uploaded image
+      const analysisResult = await analyzeImage(uploadResult.fileUrl);
+      setImageAnalysis(analysisResult);
+
+      // Proceed with color analysis (you may want to use the uploaded image URL here)
       const analysis = await mockColorAnalysisAPI(file);
       setColorAnalysis(analysis);
       setPhotoUploaded(true)
@@ -116,10 +128,10 @@ export default function StyleflowApp() {
         description: "Seu perfil de estilo está pronto!",
       })
     } catch (error) {
-      console.error('Erro durante a análise de cores:', error);
+      console.error('Erro durante o upload ou análise de cores:', error);
       toast({
         title: "Erro",
-        description: "Falha ao analisar a foto. Por favor, tente novamente.",
+        description: "Falha ao enviar ou analisar a foto. Por favor, tente novamente.",
         variant: "destructive",
       })
     } finally {
@@ -511,6 +523,12 @@ export default function StyleflowApp() {
                     <h4 className="text-xl font-light mb-2 text-stone-800">Dicas Sazonais:</h4>
                     <p className="text-stone-700">{colorAnalysis.tips}</p>
                   </Card>
+                  {imageAnalysis && (
+                    <Card className="p-6 mt-8">
+                      <h3 className="text-2xl font-light mb-4 text-stone-800">Análise da Imagem</h3>
+                      <p className="text-stone-700">{imageAnalysis}</p>
+                    </Card>
+                  )}
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
