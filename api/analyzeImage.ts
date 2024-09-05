@@ -60,10 +60,31 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
 
     // Criando o objeto ColorAnalysis com os dados das análises
     const colorAnalysis: ColorAnalysis = {
-      colorPalette: openAIData.analise_colorimetrica.paleta_recomendada.cores_basicas.map((cor: any) => cor.rgb_hex),
+      colorPaletteNeutras: openAIData.analise_colorimetrica.paleta_recomendada.cores_neutras.map((cor: any) => cor.rgb_hex),
+      colorPaletteBasicas: openAIData.analise_colorimetrica.paleta_recomendada.cores_basicas.map((cor: any) => cor.rgb_hex),
+      colorPaletteDestaque: openAIData.analise_colorimetrica.paleta_recomendada.cores_destaque.map((cor: any) => cor.rgb_hex),
       season: openAIData.analise_colorimetrica.classificacao.estacao,
-      characteristics: anthropicData.Análise_Detalhada.a['Paleta de cores ideal'],
-      tips: anthropicData.Exemplos_concretos
+      seasonSubtype: openAIData.analise_colorimetrica.classificacao.subtipo,
+      seasonTone: openAIData.analise_colorimetrica.classificacao.tom,
+      seasonIntensity: openAIData.analise_colorimetrica.classificacao.intensidade,
+      seasonSummary: openAIData.analise_colorimetrica.resumo_classificacao,
+      generalSummary: openAIData.analise_colorimetrica.resumo_geral,
+      justification: openAIData.analise_colorimetrica.justificativa,
+      characteristics: {
+        pele: anthropicData.Análise_Detalhada.a['Paleta de cores ideal'].pele,
+        olhos: anthropicData.Análise_Detalhada.a['Paleta de cores ideal'].olhos,
+        cabelo: anthropicData.Análise_Detalhada.a['Paleta de cores ideal'].cabelo,
+      },
+      recommendations: {
+        vestuario: openAIData.analise_colorimetrica.recomendacoes.vestuario,
+        maquiagem: openAIData.analise_colorimetrica.recomendacoes.maquiagem,
+        acessorios: openAIData.analise_colorimetrica.recomendacoes.acessorios,
+        cabelo: openAIData.analise_colorimetrica.recomendacoes.cabelo,
+      },
+      colorsToAvoid: openAIData.analise_colorimetrica.cores_evitar,
+      recommendationsSummary: openAIData.analise_colorimetrica.resumo_recomendacoes,
+      exampleLooks: openAIData.analise_colorimetrica.exemplos_looks,
+      makeupRoutine: openAIData.analise_colorimetrica.rotina_maquiagem,
     };
 
     return colorAnalysis;

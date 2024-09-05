@@ -36,7 +36,7 @@ import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { toast } from "@/components/ui/use-toast"
 
-import { uploadImageToBytescale, analyzeImage, mockColorAnalysisAPI, mockRecommendationAPI, mockVirtualTryOnAPI } from '../api'
+import { uploadImageToBytescale, analyzeImage, mockRecommendationAPI, mockVirtualTryOnAPI } from '../api'
 import { ColorAnalysis, Recommendation, VirtualTryOnResult } from "@/api/types"
 
 export default function StyleflowApp() {

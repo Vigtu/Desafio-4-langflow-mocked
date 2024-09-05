@@ -27,6 +27,9 @@ export interface ColorAnalysis {
     descricao: string
   }>
   makeupRoutine: string[]
+  // Adicione estas novas propriedades
+  colorPalette?: string[] // Use ? para tornar opcional se necessário
+  tips?: string // Use ? para tornar opcional se necessário
 }
 
 export interface Recommendation {

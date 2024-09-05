@@ -53,7 +53,13 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
     const openAIData = JSON.parse(openAIAnalysis);
     const analiseColorimetrica = openAIData.analise_colorimetrica;
 
-    // Extrair dados específicos
+    // Extrair características de forma dinâmica
+    const characteristics = {
+      pele: analiseColorimetrica.caracteristicas.pele || '',
+      olhos: analiseColorimetrica.caracteristicas.olhos || '',
+      cabelo: analiseColorimetrica.caracteristicas.cabelo || '',
+    };
+
     const colorPaletteNeutras = analiseColorimetrica.paleta_recomendada.cores_neutras.map((cor: any) => cor.rgb_hex);
     const colorPaletteBasicas = analiseColorimetrica.paleta_recomendada.cores_basicas.map((cor: any) => cor.rgb_hex);
     const colorPaletteDestaque = analiseColorimetrica.paleta_recomendada.cores_destaque.map((cor: any) => cor.rgb_hex);
@@ -67,7 +73,6 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
     const generalSummary = analiseColorimetrica.resumo_geral;
     const justification = analiseColorimetrica.justificativa;
     
-    const characteristics = analiseColorimetrica.caracteristicas;
     const recommendations = analiseColorimetrica.recomendacoes;
     const colorsToAvoid = analiseColorimetrica.cores_evitar;
     const recommendationsSummary = analiseColorimetrica.resumo_recomendacoes;
@@ -111,7 +116,11 @@ export const mockColorAnalysisAPI = async (imageFile: File): Promise<ColorAnalys
   return {
     colorPalette: ['#F5E6D3', '#D4AF37', '#8FBC8F', '#E6D7C3', '#7AA37A'],
     season: 'Outono',
-    characteristics: 'Tons de pele quentes, cores de cabelo ricas...',
+    characteristics: {
+      pele: 'Tons quentes',
+      olhos: 'Castanhos',
+      cabelo: 'Cores ricas'
+    },
     tips: 'Abrace cores quentes e ricas como vermelhos profundos...'
   }
 }
