@@ -1,25 +1,27 @@
 import axios from 'axios';
+import { ColorAnalysis } from '@/api/types';
 
-async function sendRequest(url: string, headers: Record<string, string>, data: any): Promise<any> {
+interface AnalysisResult {
+  openAIAnalysis: any;
+  anthropicAnalysis: any;
+}
+
+function extractArtifactMessages(jsonResponse: any): AnalysisResult {
+  console.log('Extraindo mensagens dos artefatos...');
   try {
-    const response = await axios.post(url, data, { headers });
-    return response.data;
+    const openAIAnalysis = jsonResponse.outputs[0].outputs[0].artifacts.message;
+    const anthropicAnalysis = jsonResponse.outputs[0].outputs[1].artifacts.message;
+    console.log('Mensagens extraídas com sucesso');
+    return { openAIAnalysis, anthropicAnalysis };
   } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error("Falha na requisição HTTP:", error.message);
-      if (error.response) {
-        console.error("Conteúdo bruto da resposta:");
-        console.error(error.response.data);
-      }
-    } else {
-      console.error("Erro inesperado:", error);
-    }
-    return null;
+    console.error("Erro ao acessar as mensagens no caminho especificado:", error);
+    return { openAIAnalysis: null, anthropicAnalysis: null };
   }
 }
 
-export async function analyzeImage(imageUrl: string): Promise<string> {
-  const url = "https://langflow.insyncautomation.online/api/v1/run/2955d2a4-ade2-47b8-84ed-c0df467c598a?stream=false";
+export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
+  console.log('Iniciando análise da imagem...');
+  const url = "https://langflow.insyncautomation.online/api/v1/run/419cc051-ca26-44b6-8416-c85c1bfcd09f?stream=false";
   const headers = {
     'Content-Type': 'application/json',
     'x-api-key': 'sk--qsZcqmQJKio9bx_O0WlQSgly11AA8XfbkZQQNo-sjU'
@@ -28,25 +30,52 @@ export async function analyzeImage(imageUrl: string): Promise<string> {
     "input_value": imageUrl,
     "output_type": "chat",
     "input_type": "chat",
+    "tweaks": {
+      "ChatInput-ytMXX": {},
+      "QwenVLComponent-AvYLy": {},
+      "OpenAIModel-ADS45": {},
+      "QwenVLComponent-yDcju": {},
+      "QwenVLComponent-b6U5A": {},
+      "QwenVLComponent-RXUin": {},
+      "Prompt-3wRDM": {},
+      "AnthropicModel-3WAaq": {},
+      "ChatOutput-ZUTdZ": {},
+      "ChatOutput-2HvHF": {}
+    }
   };
 
-  console.log("Enviando requisição com a URL da imagem:", imageUrl);
+  try {
+    console.log("Enviando requisição para análise com a URL da imagem:", imageUrl);
+    const response = await axios.post(url, data, { headers });
+    console.log("Resposta recebida da API de análise");
 
-  const responseJson = await sendRequest(url, headers, data);
+    const { openAIAnalysis, anthropicAnalysis } = extractArtifactMessages(response.data);
 
-  console.log("Resposta completa da API:", JSON.stringify(responseJson, null, 2));
+    console.log("Análise OpenAI:", openAIAnalysis);
+    console.log("Análise Anthropic:", anthropicAnalysis);
 
-  if (responseJson) {
-    try {
-      const artifactMessage = responseJson.outputs[0].outputs[0].artifacts.message;
-      console.log("Mensagem extraída:", artifactMessage);
-      return artifactMessage;
-    } catch (error) {
-      console.error("O campo 'artifacts' > 'message' não foi encontrado na resposta.");
-      return "Erro ao extrair a mensagem da resposta.";
+    // Parse das análises (assumindo que são strings JSON)
+    const openAIData = JSON.parse(openAIAnalysis);
+    const anthropicData = JSON.parse(anthropicAnalysis);
+
+    // Criando o objeto ColorAnalysis com os dados das análises
+    const colorAnalysis: ColorAnalysis = {
+      colorPalette: openAIData.analise_colorimetrica.paleta_recomendada.cores_basicas.map((cor: any) => cor.rgb_hex),
+      season: openAIData.analise_colorimetrica.classificacao.estacao,
+      characteristics: anthropicData.Análise_Detalhada.a['Paleta de cores ideal'],
+      tips: anthropicData.Exemplos_concretos
+    };
+
+    return colorAnalysis;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      console.error("Falha na requisição HTTP para análise:", error.message);
+      if (error.response) {
+        console.error("Conteúdo da resposta de erro:", error.response.data);
+      }
+    } else {
+      console.error("Erro inesperado durante a análise:", error);
     }
-  } else {
-    console.error("Nenhuma resposta JSON válida foi retornada.");
-    return "Falha ao obter uma resposta válida da API.";
+    throw error;
   }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Upload, Camera, Loader2, ArrowRight, User, Lock, Mail, Palette, Shirt, Watch, Info, Sun, Snowflake, Leaf, Cloud, ChevronUp, ChevronDown, DollarSign, Eye, ShoppingBag, Settings, Calendar, MapPin, Home, Palmtree, Umbrella, Building2, Mountain, Sunrise, Sunset, Clock, Wind, Dumbbell, Moon, Music, Briefcase, Coffee, Droplets } from 'lucide-react'
 import { Button } from "@/components/ui/button"
@@ -35,36 +35,9 @@ import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { toast } from "@/components/ui/use-toast"
-import { uploadImageToBytescale } from '../api/uploadImage'
-import { analyzeImage } from '../api/analyzeImage'
 
-// Mock API functions (replace with actual API calls in production)
-const mockColorAnalysisAPI = async (imageFile: File) => {
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  return {
-    colorPalette: ['#F5E6D3', '#D4AF37', '#8FBC8F', '#E6D7C3', '#7AA37A'],
-    season: 'Outono',
-    characteristics: 'Tons de pele quentes, cores de cabelo ricas (ruivo, castanho) e cores de olhos profundas (castanho, avelã). Contraste natural médio a alto.',
-    tips: 'Abrace cores quentes e ricas como vermelhos profundos, laranjas e amarelos dourados. Sobreponha texturas para profundidade e interesse em seus looks.'
-  };
-};
-
-const mockRecommendationAPI = async (colorAnalysis: any, filters: any) => {
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  return [
-    { id: 1, name: 'Blusa Elegante', price: 79.99, image: '/placeholder.svg?height=400&width=300&text=Blusa+Elegante' },
-    { id: 2, name: 'Suéter Casual', price: 59.99, image: '/placeholder.svg?height=400&width=300&text=Suéter+Casual' },
-    { id: 3, name: 'Jaqueta Formal', price: 129.99, image: '/placeholder.svg?height=400&width=300&text=Jaqueta+Formal' },
-    { id: 4, name: 'Cardigan Aconchegante', price: 89.99, image: '/placeholder.svg?height=400&width=300&text=Cardigan+Aconchegante' },
-    { id: 5, name: 'Top Estiloso', price: 49.99, image: '/placeholder.svg?height=400&width=300&text=Top+Estiloso' },
-    { id: 6, name: 'Blazer Chique', price: 109.99, image: '/placeholder.svg?height=400&width=300&text=Blazer+Chique' },
-  ];
-};
-
-const mockVirtualTryOnAPI = async (userImage: string, clothingImage: string) => {
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  return '/placeholder.svg?height=600&width=400&text=Prova+Virtual';
-};
+import { uploadImageToBytescale, analyzeImage, mockColorAnalysisAPI, mockRecommendationAPI, mockVirtualTryOnAPI } from '../api'
+import { ColorAnalysis, Recommendation, VirtualTryOnResult } from "@/api/types"
 
 export default function StyleflowApp() {
   const [stage, setStage] = useState('upload')
@@ -80,9 +53,9 @@ export default function StyleflowApp() {
   const [registerEmail, setRegisterEmail] = useState('')
   const [registerPassword, setRegisterPassword] = useState('')
   const [isUploading, setIsUploading] = useState(false)
-  const [colorAnalysis, setColorAnalysis] = useState<any>(null)
-  const [recommendations, setRecommendations] = useState<any[]>([])
-  const [selectedProduct, setSelectedProduct] = useState<any>(null)
+  const [colorAnalysis, setColorAnalysis] = useState<ColorAnalysis | null>(null)
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([])
+  const [selectedProduct, setSelectedProduct] = useState<Recommendation | null>(null)
   const [showVirtualTryOn, setShowVirtualTryOn] = useState(false)
   const [virtualTryOnImage, setVirtualTryOnImage] = useState('')
   const [isVirtualTryOnLoading, setIsVirtualTryOnLoading] = useState(false)
@@ -95,9 +68,18 @@ export default function StyleflowApp() {
   const [exactTime, setExactTime] = useState('')
   const [preferencesComplete, setPreferencesComplete] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [imageAnalysis, setImageAnalysis] = useState<string | null>(null)
   const [showPreferences, setShowPreferences] = useState(false)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
+  const [showSeasonalInfo, setShowSeasonalInfo] = useState(false)
+  const [mockOutfitRecommendations] = useState([
+    { name: 'Casual Chic', items: ['Blusa branca', 'Calça bege', 'Acessórios dourados'] },
+    { name: 'Elegância Noturna', items: ['Vestido verde', 'Clutch dourada', 'Saltos nude'] },
+  ])
+  const [mockAccessoryRecommendations] = useState(['Colar dourado', 'Relógio de couro', 'Lenço de seda'])
+
+  const toggleSeasonalInfo = () => {
+    setShowSeasonalInfo(!showSeasonalInfo)
+  }
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!isLoggedIn) {
@@ -110,31 +92,32 @@ export default function StyleflowApp() {
 
     setIsUploading(true)
     try {
-      // Upload the image to Bytescale
-      const uploadResult = await uploadImageToBytescale(file);
-      console.log('Image uploaded successfully:', uploadResult);
-      setUploadedImageUrl(uploadResult.fileUrl);
+      console.log('Iniciando processo de upload...');
+      const uploadResult = await uploadImageToBytescale(file)
+      console.log('Resultado do upload:', JSON.stringify(uploadResult, null, 2));
+      const imageUrl = uploadResult.fileUrl
+      setUploadedImageUrl(imageUrl)
+      
+      console.log('URL da imagem hospedada:', imageUrl);
 
-      // Analyze the uploaded image
-      const analysisResult = await analyzeImage(uploadResult.fileUrl);
-      setImageAnalysis(analysisResult);
+      const analysis = await analyzeImage(imageUrl)
+      console.log('Resultado da análise:', JSON.stringify(analysis, null, 2));
+      setColorAnalysis(analysis)
 
-      // Proceed with color analysis (you may want to use the uploaded image URL here)
-      const analysis = await mockColorAnalysisAPI(file);
-      setColorAnalysis(analysis);
       setPhotoUploaded(true)
       setStage('analysis')
       setActiveTab('analysis')
       setAnalysisComplete(true)
+
       toast({
         title: "Análise de foto concluída",
         description: "Seu perfil de estilo está pronto!",
       })
     } catch (error) {
-      console.error('Erro durante o upload ou análise de cores:', error);
+      console.error('Erro durante o upload ou análise:', error)
       toast({
         title: "Erro",
-        description: "Falha ao enviar ou analisar a foto. Por favor, tente novamente.",
+        description: "Falha ao analisar a foto. Por favor, tente novamente.",
         variant: "destructive",
       })
     } finally {
@@ -148,7 +131,7 @@ export default function StyleflowApp() {
     if (value === 'recommendations' && !preferencesComplete) {
       toast({
         title: "Ação necessária",
-        description: "Por favor, complete suas preferências de estilo antes de ver as recomendações.",
+        description: "Por favor, complete suas preferências de estilo antes de ver as recomendaçes.",
       })
       return
     }
@@ -190,7 +173,7 @@ export default function StyleflowApp() {
     })
   }
 
-  const handleProductClick = (product: any) => {
+  const handleProductClick = (product: Recommendation) => {
     setSelectedProduct(product)
   }
 
@@ -200,10 +183,10 @@ export default function StyleflowApp() {
     setShowVirtualTryOn(true)
     setIsVirtualTryOnLoading(true)
     try {
-      const tryOnImage = await mockVirtualTryOnAPI('/placeholder.svg?height=600&width=400&text=Imagem+do+Usuário', selectedProduct.image);
-      setVirtualTryOnImage(tryOnImage);
+      const tryOnImage = await mockVirtualTryOnAPI('/placeholder.svg?height=600&width=400&text=Imagem+do+Usuário', selectedProduct.image)
+      setVirtualTryOnImage(tryOnImage)
     } catch (error) {
-      console.error('Erro durante a prova virtual:', error);
+      console.error('Erro durante a prova virtual:', error)
       toast({
         title: "Erro",
         description: "Falha ao gerar a prova virtual. Por favor, tente novamente.",
@@ -215,7 +198,7 @@ export default function StyleflowApp() {
   }
 
   const handlePreferencesSubmit = async () => {
-    setPreferencesComplete(true);
+    setPreferencesComplete(true)
     const filters = {
       priceRange,
       occasion,
@@ -226,15 +209,15 @@ export default function StyleflowApp() {
       exactTime
     }
     try {
-      const newRecommendations = await mockRecommendationAPI(colorAnalysis, filters);
-      setRecommendations(newRecommendations);
-      setActiveTab('recommendations');
+      const newRecommendations = await mockRecommendationAPI(colorAnalysis!, filters)
+      setRecommendations(newRecommendations)
+      setActiveTab('recommendations')
       toast({
         title: "Preferências salvas",
         description: "Suas recomendações personalizadas estão prontas.",
       })
     } catch (error) {
-      console.error('Erro ao gerar recomendações:', error);
+      console.error('Erro ao gerar recomendações:', error)
       toast({
         title: "Erro",
         description: "Falha ao gerar recomendações. Por favor, tente novamente.",
@@ -244,13 +227,13 @@ export default function StyleflowApp() {
   }
 
   const handleContinueToRecommendations = async () => {
-    setPreferencesComplete(true);
+    setPreferencesComplete(true)
     try {
-      const newRecommendations = await mockRecommendationAPI(colorAnalysis, {});
-      setRecommendations(newRecommendations);
-      setActiveTab('recommendations');
+      const newRecommendations = await mockRecommendationAPI(colorAnalysis!, {})
+      setRecommendations(newRecommendations)
+      setActiveTab('recommendations')
     } catch (error) {
-      console.error('Erro ao gerar recomendações:', error);
+      console.error('Erro ao gerar recomendações:', error)
       toast({
         title: "Erro",
         description: "Falha ao gerar recomendações. Por favor, tente novamente.",
@@ -510,14 +493,14 @@ export default function StyleflowApp() {
                       initial={{ opacity: 0, rotate: 5 }}
                       animate={{ opacity: 1, rotate: 0 }}
                       transition={{ delay: 0.4, duration: 0.5 }}
-                      className="flex flex-col justify-center items-center"
+                      className="flex flex-col justify-center"
                     >
                       <h3 className="text-xl font-light mb-4 text-stone-800">Suas Paletas de Cores Personalizadas</h3>
                       <div className="space-y-6 w-full">
                         {[
-                          { title: "Cores Neutras", colors: ["#F5E6D3", "#E6D7C3", "#D4C3B0"] },
-                          { title: "Cores Básicas", colors: ["#8FBC8F", "#7AA37A", "#658165"] },
-                          { title: "Cores de Destaque", colors: ["#D4AF37", "#BF9F33", "#AA8F2E"] },
+                          { title: "Cores Neutras", colors: colorAnalysis.colorPaletteNeutras },
+                          { title: "Cores Básicas", colors: colorAnalysis.colorPaletteBasicas },
+                          { title: "Cores de Destaque", colors: colorAnalysis.colorPaletteDestaque },
                         ].map((palette, index) => (
                           <div key={index} className="mb-4 flex flex-col items-center">
                             <h4 className="text-sm font-medium text-stone-700 mb-2">{palette.title}</h4>
@@ -543,26 +526,106 @@ export default function StyleflowApp() {
                         ))}
                       </div>
                       <p className="text-sm text-stone-600 mt-4">Passe o mouse sobre uma cor para ver seu código</p>
+                      <Button
+                        onClick={toggleSeasonalInfo}
+                        className="mt-4 bg-[#d4af37] hover:bg-[#b8963c] text-white transition-colors duration-300"
+                      >
+                        {showSeasonalInfo ? 'Ver Recomendações' : 'Ver Detalhes Sazonais'}
+                      </Button>
                     </motion.div>
                   </div>
-                  <Card className="p-6 mb-8">
-                    <h3 className="text-2xl font-light mb-4 text-stone-800 flex items-center">
-                      {colorAnalysis.season === 'Inverno' && <Snowflake className="w-6 h-6 text-blue-500 mr-2" />}
-                      {colorAnalysis.season === 'Primavera' && <Cloud className="w-6 h-6 text-pink-500 mr-2" />}
-                      {colorAnalysis.season === 'Verão' && <Sun className="w-6 h-6 text-yellow-500 mr-2" />}
-                      {colorAnalysis.season === 'Outono' && <Leaf className="w-6 h-6 text-orange-500 mr-2" />}
-                      <span>Sua Estação: {colorAnalysis.season}</span>
-                    </h3>
-                    <p className="text-stone-700 mb-4">{colorAnalysis.characteristics}</p>
-                    <h4 className="text-xl font-light mb-2 text-stone-800">Dicas Sazonais:</h4>
-                    <p className="text-stone-700">{colorAnalysis.tips}</p>
-                  </Card>
-                  {imageAnalysis && (
-                    <Card className="p-6 mt-8">
-                      <h3 className="text-2xl font-light mb-4 text-stone-800">Análise da Imagem</h3>
-                      <p className="text-stone-700">{imageAnalysis}</p>
-                    </Card>
-                  )}
+                  <AnimatePresence mode="wait">
+                    {!showSeasonalInfo && (
+                      <motion.div
+                        key="recommendations"
+                        initial={{ opacity: 0, x: -100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -100 }}
+                        transition={{ duration: 0.5 }}
+                        className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8"
+                      >
+                        <Card className="p-4 col-span-2">
+                          <h3 className="text-xl font-light mb-4 text-stone-800 flex items-center">
+                            <Palette className="mr-2 text-[#d4af37]" />
+                            Recomendações de Outfits
+                          </h3>
+                          <ul className="space-y-2">
+                            {mockOutfitRecommendations.map((outfit, index) => (
+                              <li key={index} className="text-stone-700">
+                                <strong>{outfit.name}:</strong> {outfit.items.join(', ')}
+                              </li>
+                            ))}
+                          </ul>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <Button className="mt-4 bg-[#d4af37] hover:bg-[#b8963c] text-white transition-colors duration-300">
+                                Ver Recomendações de Outfits
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-[425px]">
+                              <DialogHeader>
+                                <DialogTitle>Seus Outfits Personalizados</DialogTitle>
+                                <DialogDescription>
+                                  Explore estas combinações de outfits criadas especialmente para você.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="grid gap-4 py-4">
+                                {mockOutfitRecommendations.map((outfit, index) => (
+                                  <Card key={index} className="p-4">
+                                    <h4 className="font-medium mb-2">{outfit.name}</h4>
+                                    <ul className="list-disc list-inside">
+                                      {outfit.items.map((item, itemIndex) => (
+                                        <li key={itemIndex}>{item}</li>
+                                      ))}
+                                    </ul>
+                                  </Card>
+                                ))}
+                              </div>
+                            </DialogContent>
+                          </Dialog>
+                        </Card>
+                        <Card className="p-4">
+                          <h3 className="text-xl font-light mb-4 text-stone-800 flex items-center">
+                            <Watch className="mr-2 text-[#d4af37]" />
+                            Acessórios Recomendados
+                          </h3>
+                          <ul className="space-y-2">
+                            {mockAccessoryRecommendations.map((accessory, index) => (
+                              <li key={index} className="text-stone-700">{accessory}</li>
+                            ))}
+                          </ul>
+                        </Card>
+                      </motion.div>
+                    )}
+                    {showSeasonalInfo && (
+                      <motion.div
+                        key="seasonal-info"
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 100 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Card className="p-6 mb-8">
+                          <h3 className="text-2xl font-light mb-4 text-stone-800 flex items-center">
+                            {colorAnalysis.season === 'Inverno' && <Snowflake className="w-6 h-6 text-blue-500 mr-2" />}
+                            {colorAnalysis.season === 'Primavera' && <Cloud className="w-6 h-6 text-pink-500 mr-2" />}
+                            {colorAnalysis.season === 'Verão' && <Sun className="w-6 h-6 text-yellow-500 mr-2" />}
+                            {colorAnalysis.season === 'Outono' && <Leaf className="w-6 h-6 text-orange-500 mr-2" />}
+                            <span>Sua Estação: {colorAnalysis.season}</span>
+                          </h3>
+                          <p className="text-stone-700 mb-4">{colorAnalysis.seasonSummary}</p>
+                          <h4 className="text-xl font-light mb-2 text-stone-800">Características:</h4>
+                          <ul className="list-disc list-inside mb-4">
+                            <li>Pele: {colorAnalysis.characteristics.pele}</li>
+                            <li>Olhos: {colorAnalysis.characteristics.olhos}</li>
+                            <li>Cabelo: {colorAnalysis.characteristics.cabelo}</li>
+                          </ul>
+                          <h4 className="text-lg font-semibold mb-2">Justificativa:</h4>
+                          <p className="text-stone-700">{colorAnalysis.justification}</p>
+                        </Card>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>  
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -588,11 +651,10 @@ export default function StyleflowApp() {
           <Card className="p-8 bg-white shadow-lg rounded-2xl min-h-[calc(100vh-300px)]">
             <h2 className="text-3xl font-light mb-8 text-center text-stone-800">Preferências de Estilo</h2>
             
-            <AnimatePresence mode="wait">
+            <AnimatePresence>
               {!showPreferences && (
                 <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   className="flex justify-center space-x-4 mb-8"
                 >
@@ -612,7 +674,9 @@ export default function StyleflowApp() {
                   </Button>
                 </motion.div>
               )}
+            </AnimatePresence>
 
+            <AnimatePresence>
               {showPreferences && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -843,7 +907,6 @@ export default function StyleflowApp() {
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
-
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

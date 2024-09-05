@@ -11,17 +11,18 @@ export async function uploadImageToBytescale(file: File) {
   };
 
   try {
+    console.log('Iniciando upload da imagem para Bytescale...');
     const response = await axios.post(uploadUrl, file, { headers });
     
     if (response.status === 200) {
-      console.log('Image uploaded successfully:', response.data);
+      console.log('Imagem enviada com sucesso. Resposta do Bytescale:', JSON.stringify(response.data, null, 2));
       return response.data;
     } else {
-      console.error('Error uploading image:', response.status, response.statusText);
-      throw new Error('Image upload failed');
+      console.error('Erro ao enviar imagem:', response.status, response.statusText);
+      throw new Error('Falha no upload da imagem');
     }
   } catch (error) {
-    console.error('Error uploading image:', error);
+    console.error('Erro durante o upload da imagem:', error);
     throw error;
   }
 }
