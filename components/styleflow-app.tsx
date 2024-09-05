@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Upload, Camera, Loader2, ArrowRight, User, Lock, Mail, Palette, Shirt, Watch, Info, Sun, Snowflake, Leaf, Cloud, ChevronUp, ChevronDown, DollarSign, Eye, ShoppingBag, Settings, Calendar, MapPin, Home, Palmtree, Umbrella, Building2, Mountain, Sunrise, Sunset, Clock, Wind, Dumbbell, Moon, Music, Briefcase, Coffee, Droplets } from 'lucide-react'
 import { Button } from "@/components/ui/button"
@@ -37,8 +37,17 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { toast } from "@/components/ui/use-toast"
 
 import { uploadImageToBytescale, analyzeImage, mockRecommendationAPI, mockVirtualTryOnAPI } from '../api'
-import { ColorAnalysis, Recommendation, VirtualTryOnResult } from "@/api/types"
+import { ColorAnalysis, Recommendation, VirtualTryOnResult, APIRecommendation } from "@/api/types"
 import { usePreferences } from '@/hooks/usePreferences'
+import { getRecommendations } from '@/api/recommendationAPI'
+import LoopEffect from '@/components/ui/LoopEffect'
+
+// Componente de loading simples
+const SimpleLoading = () => (
+  <div className="flex justify-center items-center">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d4af37]"></div>
+  </div>
+);
 
 export default function StyleflowApp() {
   const [stage, setStage] = useState('upload')
@@ -55,8 +64,8 @@ export default function StyleflowApp() {
   const [registerPassword, setRegisterPassword] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [colorAnalysis, setColorAnalysis] = useState<ColorAnalysis | null>(null)
-  const [recommendations, setRecommendations] = useState<Recommendation[]>([])
-  const [selectedProduct, setSelectedProduct] = useState<Recommendation | null>(null)
+  const [apiRecommendations, setApiRecommendations] = useState<APIRecommendation[]>([])
+  const [selectedProduct, setSelectedProduct] = useState<APIRecommendation | null>(null)
   const [showVirtualTryOn, setShowVirtualTryOn] = useState(false)
   const [virtualTryOnImage, setVirtualTryOnImage] = useState('')
   const [isVirtualTryOnLoading, setIsVirtualTryOnLoading] = useState(false)
@@ -70,7 +79,16 @@ export default function StyleflowApp() {
     { name: 'Elegância Noturna', items: ['Vestido verde', 'Clutch dourada', 'Saltos nude'] },
   ])
   const [mockAccessoryRecommendations] = useState(['Colar dourado', 'Relógio de couro', 'Lenço de seda'])
-  const { preferences, updatePreference, getPreferencesString } = usePreferences()
+  const { preferences, updatePreference, getPreferencesString, skipQuiz } = usePreferences()
+  const [isLoading, setIsLoading] = useState(false)
+
+  // Adicionando um useEffect para logar as recomendações
+  useEffect(() => {
+    console.log('apiRecommendations atualizado:', apiRecommendations)
+    console.log('Número de recomendações:', apiRecommendations.length)
+    console.log('Active tab:', activeTab)
+    console.log('Preferences complete:', preferencesComplete)
+  }, [apiRecommendations, activeTab, preferencesComplete])
 
   const toggleSeasonalInfo = () => {
     setShowSeasonalInfo(!showSeasonalInfo)
@@ -160,7 +178,7 @@ export default function StyleflowApp() {
     setActiveTab('upload')
     setStage('upload')
     setColorAnalysis(null)
-    setRecommendations([])
+    setApiRecommendations([])
     setPreferencesComplete(false)
     toast({
       title: "Logout realizado",
@@ -168,7 +186,7 @@ export default function StyleflowApp() {
     })
   }
 
-  const handleProductClick = (product: Recommendation) => {
+  const handleProductClick = (product: APIRecommendation) => {
     setSelectedProduct(product)
   }
 
@@ -178,8 +196,13 @@ export default function StyleflowApp() {
     setShowVirtualTryOn(true)
     setIsVirtualTryOnLoading(true)
     try {
-      const tryOnImage = await mockVirtualTryOnAPI('/placeholder.svg?height=600&width=400&text=Imagem+do+Usuário', selectedProduct.image)
-      setVirtualTryOnImage(tryOnImage)
+      // Simulating API call for virtual try-on
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      setVirtualTryOnImage('/placeholder.svg?height=600&width=400&text=Virtual+Try-On')
+      toast({
+        title: "Prova virtual concluída",
+        description: "Sua imagem de prova virtual está pronta!",
+      })
     } catch (error) {
       console.error('Erro durante a prova virtual:', error)
       toast({
@@ -193,27 +216,34 @@ export default function StyleflowApp() {
   }
 
   const handlePreferencesSubmit = async () => {
+    setIsLoading(true)
     setPreferencesComplete(true)
     const preferencesString = getPreferencesString()
     console.log('Preferências do usuário:', preferencesString)
     
-    const filters = {
-      priceRange: preferences.priceRange,
-      occasion: preferences.occasion,
-      detailedOccasion: preferences.detailedOccasion,
-      location: preferences.location,
-      weather: preferences.weather,
-      time: preferences.time,
-      exactTime: preferences.exactTime
-    }
     try {
-      const newRecommendations = await mockRecommendationAPI(colorAnalysis!, filters)
-      setRecommendations(newRecommendations)
-      setActiveTab('recommendations')
-      toast({
-        title: "Preferências salvas",
-        description: "Suas recomendações personalizadas estão prontas.",
-      })
+      const filteredResponse = await getRecommendations(JSON.stringify(colorAnalysis), preferencesString)
+      console.log("Resposta filtrada da API de recomendações:", filteredResponse)
+      
+      // Processar a resposta e extrair as recomendações
+      const extractedRecommendations = extractRecommendationsFromResponse(filteredResponse)
+      
+      // Atualizar o estado com as novas recomendações
+      setApiRecommendations(extractedRecommendations)
+      
+      if (extractedRecommendations.length > 0) {
+        setActiveTab('recommendations')
+        toast({
+          title: "Recomendações prontas",
+          description: `${extractedRecommendations.length} itens recomendados para você.`,
+        })
+      } else {
+        toast({
+          title: "Sem recomendações",
+          description: "Não foi possível gerar recomendações. Tente novamente.",
+          variant: "destructive",
+        })
+      }
     } catch (error) {
       console.error('Erro ao gerar recomendações:', error)
       toast({
@@ -221,15 +251,72 @@ export default function StyleflowApp() {
         description: "Falha ao gerar recomendações. Por favor, tente novamente.",
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
+  const extractRecommendationsFromResponse = (response: any): APIRecommendation[] => {
+    console.log("Resposta completa da API:", response)
+
+    if (!response || typeof response !== 'object') {
+      console.error('Resposta da API inválida')
+      return []
+    }
+
+    const recommendations: APIRecommendation[] = []
+
+    // Função auxiliar para adicionar um item à lista de recomendações
+    const addRecommendation = (item: any) => {
+      if (item && item.nome && item.link && item.imagem && item.preco) {
+        recommendations.push({
+          name: item.nome,
+          link: item.link,
+          image: item.imagem,
+          price: parseFloat(item.preco)
+        })
+      }
+    }
+
+    // Adicionar itens do look completo
+    if (response.look_completo) {
+      addRecommendation(response.look_completo.peca_principal)
+      addRecommendation(response.look_completo.calcado)
+      addRecommendation(response.look_completo.acessorio)
+      if (response.look_completo.peca_complementar) {
+        addRecommendation(response.look_completo.peca_complementar)
+      }
+    }
+
+    // Adicionar alternativas
+    if (response.alternativas) {
+      Object.values(response.alternativas).forEach(addRecommendation)
+    }
+
+    console.log("Recomendações extraídas:", recommendations)
+    return recommendations
+  }
+
   const handleContinueToRecommendations = async () => {
+    setIsLoading(true)
+    skipQuiz()
     setPreferencesComplete(true)
+    const preferencesString = " " // String vazia para preferências
+    console.log('Preferências do usuário:', preferencesString)
+    
     try {
-      const newRecommendations = await mockRecommendationAPI(colorAnalysis!, {})
-      setRecommendations(newRecommendations)
+      const filteredResponse = await getRecommendations(JSON.stringify(colorAnalysis), preferencesString)
+      console.log("Resposta filtrada da API de recomendações:", filteredResponse)
+      
+      // Processar a resposta e extrair as recomendações
+      const extractedRecommendations: APIRecommendation[] = extractRecommendationsFromResponse(filteredResponse)
+      
+      setApiRecommendations(extractedRecommendations)
       setActiveTab('recommendations')
+      toast({
+        title: "Recomendações prontas",
+        description: "Suas recomendações estão prontas para visualização.",
+      })
     } catch (error) {
       console.error('Erro ao gerar recomendações:', error)
       toast({
@@ -237,6 +324,8 @@ export default function StyleflowApp() {
         description: "Falha ao gerar recomendações. Por favor, tente novamente.",
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -669,9 +758,16 @@ export default function StyleflowApp() {
                   <Button
                     onClick={handleContinueToRecommendations}
                     className="bg-[#8fbc8f] hover:bg-[#7aa37a] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
+                    disabled={isLoading}
                   >
-                    Continuar e Ver Recomendações
-                    <ArrowRight className="ml-2 h-5 w-5" />
+                    {isLoading ? (
+                      <SimpleLoading />
+                    ) : (
+                      <>
+                        Continuar e Ver Recomendações
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </>
+                    )}
                   </Button>
                 </motion.div>
               )}
@@ -917,9 +1013,16 @@ export default function StyleflowApp() {
                     <Button 
                       onClick={handlePreferencesSubmit} 
                       className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-8 py-3 text-lg rounded-full"
+                      disabled={isLoading}
                     >
-                      Ver Recomendações
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      {isLoading ? (
+                        <SimpleLoading />
+                      ) : (
+                        <>
+                          Ver Recomendações
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </>
+                      )}
                     </Button>
                   </motion.div>
                 </motion.div>
@@ -931,49 +1034,53 @@ export default function StyleflowApp() {
         <TabsContent value="recommendations">
           <Card className="p-8 bg-white shadow-lg rounded-2xl min-h-[calc(100vh-300px)]">
             <h2 className="text-3xl font-light mb-8 text-center text-stone-800">Suas Recomendações Personalizadas</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {recommendations.map((item, index) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                >
-                  <Card 
-                    className="overflow-hidden transition-all duration-300 hover:shadow-lg group cursor-pointer relative"
-                    onClick={() => handleProductClick(item)}
+            {apiRecommendations.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {apiRecommendations.map((item, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1, duration: 0.5 }}
                   >
-                    <div className="relative overflow-hidden">
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 20 }}
-                        >
-                          <Eye className="text-white w-10 h-10" />
-                        </motion.div>
-                      </div>
-                    </div>
-                    <div className="p-4 bg-white">
-                      <h3 className="font-light text-lg mb-2 text-stone-800">{item.name}</h3>
-                      <p className="text-sm text-[#d4af37]">R${item.price.toFixed(2)}</p>
-                    </div>
-                    <motion.div 
-                      className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
+                    <Card 
+                      className="overflow-hidden transition-all duration-300 hover:shadow-lg group cursor-pointer relative"
+                      onClick={() => handleProductClick(item)}
                     >
-                      <ShoppingBag className="w-5 h-5 text-[#d4af37]" />
-                    </motion.div>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
+                      <div className="relative overflow-hidden">
+                        <img
+                          src={item.image}
+                          alt={item.name}
+                          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.2, type: "spring", stiffness: 300, damping: 20 }}
+                          >
+                            <Eye className="text-white w-10 h-10" />
+                          </motion.div>
+                        </div>
+                      </div>
+                      <div className="p-4 bg-white">
+                        <h3 className="font-light text-lg mb-2 text-stone-800">{item.name}</h3>
+                        <p className="text-sm text-[#d4af37]">R${item.price.toFixed(2)}</p>
+                      </div>
+                      <motion.div 
+                        className="absolute top-2 right-2 bg-white rounded-full p-2 shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                      >
+                        <ShoppingBag className="w-5 h-5 text-[#d4af37]" />
+                      </motion.div>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-center text-stone-600">Nenhuma recomendação disponível no momento.</p>
+            )}
           </Card>
         </TabsContent>
       </Tabs>
@@ -998,7 +1105,7 @@ export default function StyleflowApp() {
           </div>
           <div className="flex justify-between">
             <Button
-              onClick={() => window.open('https://example.com/product', '_blank')}
+              onClick={() => window.open(selectedProduct?.link, '_blank')}
               className="bg-[#d4af37] hover:bg-[#b8963c] text-white"
             >
               Ver Produto
@@ -1046,13 +1153,15 @@ export default function StyleflowApp() {
             )}
           </div>
           <Button
-            onClick={() => window.open('https://example.com/product', '_blank')}
+            onClick={() => selectedProduct && window.open(selectedProduct.link, '_blank')}
             className="bg-[#d4af37] hover:bg-[#b8963c] text-white"
           >
             Comprar Item
           </Button>
         </DialogContent>
       </Dialog>
+
+      {isLoading && <SimpleLoading />}
     </div>
   )
 }
