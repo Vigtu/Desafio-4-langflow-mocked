@@ -41,6 +41,7 @@ import { ColorAnalysis, Recommendation, VirtualTryOnResult, APIRecommendation } 
 import { usePreferences } from '@/hooks/usePreferences'
 import { getRecommendations } from '@/api/recommendationAPI'
 import LoopEffect from '@/components/ui/LoopEffect'
+import { callTryOnAPI } from '@/api/tryOnAPI'
 
 // Componente de loading simples
 const SimpleLoading = () => (
@@ -191,14 +192,22 @@ export default function StyleflowApp() {
   }
 
   const handleVirtualTryOn = async () => {
-    if (!selectedProduct) return
+    if (!selectedProduct || !uploadedImageUrl) {
+      toast({
+        title: "Erro",
+        description: "Imagem do usuário ou produto não disponível.",
+        variant: "destructive",
+      })
+      return
+    }
 
     setShowVirtualTryOn(true)
     setIsVirtualTryOnLoading(true)
     try {
-      // Simulating API call for virtual try-on
-      await new Promise(resolve => setTimeout(resolve, 2000))
-      setVirtualTryOnImage('/placeholder.svg?height=600&width=400&text=Virtual+Try-On')
+      console.log("Iniciando prova virtual com:", uploadedImageUrl, selectedProduct.image)
+      const tryOnResult = await callTryOnAPI(uploadedImageUrl, selectedProduct.image)
+      console.log("Resultado da prova virtual:", tryOnResult)
+      setVirtualTryOnImage(tryOnResult)
       toast({
         title: "Prova virtual concluída",
         description: "Sua imagem de prova virtual está pronta!",
@@ -1105,7 +1114,7 @@ export default function StyleflowApp() {
           </div>
           <div className="flex justify-between">
             <Button
-              onClick={() => window.open(selectedProduct?.link, '_blank')}
+              onClick={() => selectedProduct && window.open(selectedProduct.link, '_blank')}
               className="bg-[#d4af37] hover:bg-[#b8963c] text-white"
             >
               Ver Produto
