@@ -243,6 +243,22 @@ export default function StyleflowApp() {
     }
   }
 
+  const handleContinueToRecommendations = async () => {
+    setPreferencesComplete(true);
+    try {
+      const newRecommendations = await mockRecommendationAPI(colorAnalysis, {});
+      setRecommendations(newRecommendations);
+      setActiveTab('recommendations');
+    } catch (error) {
+      console.error('Erro ao gerar recomendações:', error);
+      toast({
+        title: "Erro",
+        description: "Falha ao gerar recomendações. Por favor, tente novamente.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const getProgressValue = () => {
     if (activeTab === 'upload') return 25
     if (activeTab === 'analysis') return 50
@@ -572,27 +588,31 @@ export default function StyleflowApp() {
           <Card className="p-8 bg-white shadow-lg rounded-2xl min-h-[calc(100vh-300px)]">
             <h2 className="text-3xl font-light mb-8 text-center text-stone-800">Preferências de Estilo</h2>
             
-            <div className="flex justify-center space-x-4 mb-8">
-              <Button
-                onClick={() => setShowPreferences(true)}
-                className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
-              >
-                <Settings className="mr-2 h-5 w-5" />
-                Personalizar Minhas Preferências
-              </Button>
-              <Button
-                onClick={() => {
-                  setPreferencesComplete(true);
-                  setActiveTab('recommendations');
-                }}
-                className="bg-[#8fbc8f] hover:bg-[#7aa37a] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
-              >
-                Continuar e Ver Recomendações
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </div>
+            <AnimatePresence mode="wait">
+              {!showPreferences && (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex justify-center space-x-4 mb-8"
+                >
+                  <Button
+                    onClick={() => setShowPreferences(true)}
+                    className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
+                  >
+                    <Settings className="mr-2 h-5 w-5" />
+                    Personalizar Minhas Preferências
+                  </Button>
+                  <Button
+                    onClick={handleContinueToRecommendations}
+                    className="bg-[#8fbc8f] hover:bg-[#7aa37a] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
+                  >
+                    Continuar e Ver Recomendações
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Button>
+                </motion.div>
+              )}
 
-            <AnimatePresence>
               {showPreferences && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
@@ -600,7 +620,7 @@ export default function StyleflowApp() {
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.5 }}
                 >
-                  <Accordion type="single" collapsible className="w-full">
+                  <Accordion type="single" collapsible className="w-full mb-8">
                     <AccordionItem value="price">
                       <AccordionTrigger>
                         <DollarSign className="w-5 h-5 mr-2" />
@@ -823,7 +843,13 @@ export default function StyleflowApp() {
                       </AccordionContent>
                     </AccordionItem>
                   </Accordion>
-                  <div className="mt-8 flex justify-end">
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="flex justify-center"
+                  >
                     <Button 
                       onClick={handlePreferencesSubmit} 
                       className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-8 py-3 text-lg rounded-full"
@@ -831,7 +857,7 @@ export default function StyleflowApp() {
                       Ver Recomendações
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
-                  </div>
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
