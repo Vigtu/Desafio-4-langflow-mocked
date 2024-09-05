@@ -38,6 +38,7 @@ import { toast } from "@/components/ui/use-toast"
 
 import { uploadImageToBytescale, analyzeImage, mockRecommendationAPI, mockVirtualTryOnAPI } from '../api'
 import { ColorAnalysis, Recommendation, VirtualTryOnResult } from "@/api/types"
+import { usePreferences } from '@/hooks/usePreferences'
 
 export default function StyleflowApp() {
   const [stage, setStage] = useState('upload')
@@ -59,13 +60,6 @@ export default function StyleflowApp() {
   const [showVirtualTryOn, setShowVirtualTryOn] = useState(false)
   const [virtualTryOnImage, setVirtualTryOnImage] = useState('')
   const [isVirtualTryOnLoading, setIsVirtualTryOnLoading] = useState(false)
-  const [priceRange, setPriceRange] = useState([0, 200])
-  const [occasion, setOccasion] = useState('')
-  const [detailedOccasion, setDetailedOccasion] = useState('')
-  const [location, setLocation] = useState('')
-  const [weather, setWeather] = useState('')
-  const [time, setTime] = useState('')
-  const [exactTime, setExactTime] = useState('')
   const [preferencesComplete, setPreferencesComplete] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showPreferences, setShowPreferences] = useState(false)
@@ -76,6 +70,7 @@ export default function StyleflowApp() {
     { name: 'Elegância Noturna', items: ['Vestido verde', 'Clutch dourada', 'Saltos nude'] },
   ])
   const [mockAccessoryRecommendations] = useState(['Colar dourado', 'Relógio de couro', 'Lenço de seda'])
+  const { preferences, updatePreference, getPreferencesString } = usePreferences()
 
   const toggleSeasonalInfo = () => {
     setShowSeasonalInfo(!showSeasonalInfo)
@@ -199,14 +194,17 @@ export default function StyleflowApp() {
 
   const handlePreferencesSubmit = async () => {
     setPreferencesComplete(true)
+    const preferencesString = getPreferencesString()
+    console.log('Preferências do usuário:', preferencesString)
+    
     const filters = {
-      priceRange,
-      occasion,
-      detailedOccasion,
-      location,
-      weather,
-      time,
-      exactTime
+      priceRange: preferences.priceRange,
+      occasion: preferences.occasion,
+      detailedOccasion: preferences.detailedOccasion,
+      location: preferences.location,
+      weather: preferences.weather,
+      time: preferences.time,
+      exactTime: preferences.exactTime
     }
     try {
       const newRecommendations = await mockRecommendationAPI(colorAnalysis!, filters)
@@ -545,53 +543,56 @@ export default function StyleflowApp() {
                         className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8"
                       >
                         <Card className="p-4 col-span-2">
-                          <h3 className="text-xl font-light mb-4 text-stone-800 flex items-center">
+                          <h3 className="text-xl font-light mb-4 text-stone-800 flex items-center justify-center">
                             <Palette className="mr-2 text-[#d4af37]" />
-                            Recomendações de Outfits
+                            Combinações de Cores Recomendadas
                           </h3>
-                          <ul className="space-y-2">
-                            {mockOutfitRecommendations.map((outfit, index) => (
-                              <li key={index} className="text-stone-700">
-                                <strong>{outfit.name}:</strong> {outfit.items.join(', ')}
-                              </li>
-                            ))}
-                          </ul>
+                          {colorAnalysis && colorAnalysis.combinacoes_cores ? (
+                            <ul className="space-y-2">
+                              {colorAnalysis.combinacoes_cores.map((combinacao, index) => (
+                                <li key={index} className="text-stone-700">
+                                  {combinacao}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="text-stone-700">Nenhuma combinação de cores disponível.</p>
+                          )}
                           <Dialog>
                             <DialogTrigger asChild>
                               <Button className="mt-4 bg-[#d4af37] hover:bg-[#b8963c] text-white transition-colors duration-300">
-                                Ver Recomendações de Outfits
+                                Ver Combinações de Cores Detalhadas
                               </Button>
                             </DialogTrigger>
                             <DialogContent className="sm:max-w-[425px]">
                               <DialogHeader>
-                                <DialogTitle>Seus Outfits Personalizados</DialogTitle>
+                                <DialogTitle>Suas Combinações de Cores Personalizadas</DialogTitle>
                                 <DialogDescription>
-                                  Explore estas combinações de outfits criadas especialmente para você.
+                                  Explore estas combinações de cores criadas especialmente para você.
                                 </DialogDescription>
                               </DialogHeader>
                               <div className="grid gap-4 py-4">
-                                {mockOutfitRecommendations.map((outfit, index) => (
-                                  <Card key={index} className="p-4">
-                                    <h4 className="font-medium mb-2">{outfit.name}</h4>
-                                    <ul className="list-disc list-inside">
-                                      {outfit.items.map((item, itemIndex) => (
-                                        <li key={itemIndex}>{item}</li>
-                                      ))}
-                                    </ul>
-                                  </Card>
-                                ))}
+                                {colorAnalysis && colorAnalysis.combinacoes_cores ? (
+                                  colorAnalysis.combinacoes_cores.map((combinacao, index) => (
+                                    <Card key={index} className="p-4">
+                                      <p>{combinacao}</p>
+                                    </Card>
+                                  ))
+                                ) : (
+                                  <p>Nenhuma combinação de cores disponível.</p>
+                                )}
                               </div>
                             </DialogContent>
                           </Dialog>
                         </Card>
                         <Card className="p-4">
-                          <h3 className="text-xl font-light mb-4 text-stone-800 flex items-center">
+                          <h3 className="text-xl font-light mb-4 text-stone-800 flex items-center justify-center">
                             <Watch className="mr-2 text-[#d4af37]" />
-                            Acessórios Recomendados
+                            Cores a Evitar
                           </h3>
                           <ul className="space-y-2">
-                            {mockAccessoryRecommendations.map((accessory, index) => (
-                              <li key={index} className="text-stone-700">{accessory}</li>
+                            {colorAnalysis.colorsToAvoid.map((color, index) => (
+                              <li key={index} className="text-stone-700">{color}</li>
                             ))}
                           </ul>
                         </Card>
@@ -606,7 +607,7 @@ export default function StyleflowApp() {
                         transition={{ duration: 0.5 }}
                       >
                         <Card className="p-6 mb-8">
-                          <h3 className="text-2xl font-light mb-4 text-stone-800 flex items-center">
+                          <h3 className="text-2xl font-light mb-4 text-stone-800 flex items-center justify-center">
                             {colorAnalysis.season === 'Inverno' && <Snowflake className="w-6 h-6 text-blue-500 mr-2" />}
                             {colorAnalysis.season === 'Primavera' && <Cloud className="w-6 h-6 text-pink-500 mr-2" />}
                             {colorAnalysis.season === 'Verão' && <Sun className="w-6 h-6 text-yellow-500 mr-2" />}
@@ -693,15 +694,15 @@ export default function StyleflowApp() {
                       <AccordionContent>
                         <div className="space-y-4">
                           <Label htmlFor="price-range" className="text-stone-700 mb-2 block">
-                            Faixa de Preço: R${priceRange[0]} - R${priceRange[1]}
+                            Faixa de Preço: R${preferences.priceRange[0]} - R${preferences.priceRange[1]}
                           </Label>
                           <Slider
                             id="price-range"
                             min={0}
                             max={500}
                             step={10}
-                            value={priceRange}
-                            onValueChange={setPriceRange}
+                            value={preferences.priceRange}
+                            onValueChange={(value) => updatePreference('priceRange', value)}
                             className="mb-4"
                           />
                         </div>
@@ -715,7 +716,7 @@ export default function StyleflowApp() {
                       <AccordionContent>
                         <div className="space-y-4">
                           <Label htmlFor="occasion" className="text-stone-700">Ocasião</Label>
-                          <Select value={occasion} onValueChange={setOccasion}>
+                          <Select value={preferences.occasion} onValueChange={(value) => updatePreference('occasion', value)}>
                             <SelectTrigger id="occasion">
                               <SelectValue placeholder="Selecione uma ocasião" />
                             </SelectTrigger>
@@ -761,8 +762,8 @@ export default function StyleflowApp() {
                           <Input
                             id="detailed-occasion"
                             placeholder="Especifique uma ocasião detalhada (ex: Primeiro Encontro, Reunião de Negócios)"
-                            value={detailedOccasion}
-                            onChange={(e) => setDetailedOccasion(e.target.value)}
+                            value={preferences.detailedOccasion}
+                            onChange={(e) => updatePreference('detailedOccasion', e.target.value)}
                           />
                         </div>
                       </AccordionContent>
@@ -775,7 +776,7 @@ export default function StyleflowApp() {
                       <AccordionContent>
                         <div className="space-y-4">
                           <Label htmlFor="location" className="text-stone-700">Localização</Label>
-                          <Select value={location} onValueChange={setLocation}>
+                          <Select value={preferences.location} onValueChange={(value) => updatePreference('location', value)}>
                             <SelectTrigger id="location">
                               <SelectValue placeholder="Selecione uma localização" />
                             </SelectTrigger>
@@ -823,7 +824,7 @@ export default function StyleflowApp() {
                       <AccordionContent>
                         <div className="space-y-4">
                           <Label htmlFor="weather" className="text-stone-700">Clima</Label>
-                          <Select value={weather} onValueChange={setWeather}>
+                          <Select value={preferences.weather} onValueChange={(value) => updatePreference('weather', value)}>
                             <SelectTrigger id="weather">
                               <SelectValue placeholder="Selecione as condições climáticas" />
                             </SelectTrigger>
@@ -865,7 +866,7 @@ export default function StyleflowApp() {
                       <AccordionContent>
                         <div className="space-y-4">
                           <Label htmlFor="time" className="text-stone-700">Horário do Dia</Label>
-                          <Select value={time} onValueChange={setTime}>
+                          <Select value={preferences.time} onValueChange={(value) => updatePreference('time', value)}>
                             <SelectTrigger id="time">
                               <SelectValue placeholder="Selecione o horário do dia" />
                             </SelectTrigger>
@@ -899,8 +900,8 @@ export default function StyleflowApp() {
                           <Input
                             id="exact-time"
                             type="time"
-                            value={exactTime}
-                            onChange={(e) => setExactTime(e.target.value)}
+                            value={preferences.exactTime}
+                            onChange={(e) => updatePreference('exactTime', e.target.value)}
                             placeholder="Especifique um horário exato (opcional)"
                           />
                         </div>
