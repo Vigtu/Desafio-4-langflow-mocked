@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, Camera, Loader2, ArrowRight, User, Lock, Mail, Palette, Shirt, Watch, Info, Sun, Snowflake, Leaf, Cloud, ChevronUp, ChevronDown, DollarSign, Eye, ShoppingBag, Settings, Calendar, MapPin, Home, Palmtree, Umbrella, Building2, Mountain, Sunrise, Sunset, Clock, Wind, Dumbbell, Moon, Music, Briefcase, Coffee, Droplets } from 'lucide-react'
+import { Upload, Camera, Loader2, ArrowRight, User, Lock, Mail, Palette, Shirt, Watch, Info, Sun, Snowflake, Leaf, Cloud, ChevronUp, ChevronDown, DollarSign, Eye, ShoppingBag, Settings, Calendar, MapPin, Home, Palmtree, Umbrella, Building2, Mountain, Sunrise, Sunset, Clock, Wind, Dumbbell, Moon, Music, Briefcase, Coffee, Droplets, X } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -76,6 +76,7 @@ export default function StyleflowApp() {
   const [showSeasonalInfo, setShowSeasonalInfo] = useState(false)
   const { preferences, updatePreference, getPreferencesString, skipQuiz } = usePreferences()
   const [isLoading, setIsLoading] = useState(false)
+  const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false)
 
   // Adicionando um useEffect para logar as recomendações
   useEffect(() => {
@@ -569,7 +570,26 @@ export default function StyleflowApp() {
                   transition={{ duration: 0.5 }}
                   className="text-center"
                 >
-                  <h2 className="text-3xl font-light mb-8 text-stone-800">Análise de Imagem Concluída</h2>
+                  <div className="flex items-center justify-center mb-8">
+                    <h2 className="text-3xl font-light text-stone-800">Análise de Imagem Concluída</h2>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="ml-2 text-stone-500 hover:text-stone-700 transition-colors duration-200"
+                            onClick={() => setShowDetailedAnalysis(true)}
+                          >
+                            <Info className="h-5 w-5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Expandir análise detalhada</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     <motion.div
                       initial={{ opacity: 0, rotate: -5 }}
@@ -744,6 +764,51 @@ export default function StyleflowApp() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <AnimatePresence>
+              {showDetailedAnalysis && (
+                <motion.div
+                  initial={{ opacity: 0, x: '100%' }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: '100%' }}
+                  transition={{ type: 'tween', duration: 0.5 }}
+                  className="fixed inset-y-0 right-0 w-full sm:w-2/3 md:w-1/2 lg:w-1/3 bg-white shadow-lg z-50 overflow-y-auto"
+                >
+                  <div className="p-6">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="absolute top-4 right-4"
+                      onClick={() => setShowDetailedAnalysis(false)}
+                    >
+                      <X className="h-6 w-6" />
+                    </Button>
+                    <h3 className="text-2xl font-semibold mb-6">Análise Detalhada</h3>
+                    <ScrollArea className="h-[calc(100vh-100px)]">
+                      <div className="space-y-6">
+                        <section>
+                          <h4 className="text-xl font-medium mb-3">Paleta de Cores</h4>
+                          {/* Adicione informações detalhadas da paleta de cores */}
+                        </section>
+                        <Separator />
+                        <section>
+                          <h4 className="text-xl font-medium mb-3">Contraste</h4>
+                          {/* Adicione análise de contraste */}
+                        </section>
+                        {/* Adicione mais seções conforme necessário */}
+                      </div>
+                    </ScrollArea>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div
+              className={`fixed inset-0 bg-black transition-opacity duration-500 ${
+                showDetailedAnalysis ? 'opacity-50' : 'opacity-0 pointer-events-none'
+              }`}
+              onClick={() => setShowDetailedAnalysis(false)}
+            ></div>
           </Card>
         </TabsContent>
 
