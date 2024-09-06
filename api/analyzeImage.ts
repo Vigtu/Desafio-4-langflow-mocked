@@ -85,8 +85,10 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
       recommendationsSummary: openAIData.analise_colorimetrica.resumo_recomendacoes,
       exampleLooks: openAIData.analise_colorimetrica.exemplos_looks,
       makeupRoutine: openAIData.analise_colorimetrica.rotina_maquiagem,
+      combinacoes_cores: openAIData.analise_colorimetrica.combinacoes_cores || [] // Adicionando esta linha
     };
 
+    console.log("Análise de cor processada:", JSON.stringify(colorAnalysis, null, 2));
     return colorAnalysis;
   } catch (error) {
     if (axios.isAxiosError(error)) {

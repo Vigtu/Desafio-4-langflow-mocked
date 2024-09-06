@@ -96,7 +96,8 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
       colorsToAvoid,
       recommendationsSummary,
       exampleLooks,
-      makeupRoutine
+      makeupRoutine,
+      combinacoes_cores: analiseColorimetrica.combinacoes_cores || [] // Adicionando esta linha
     };
 
     console.log("Análise de cor processada:", JSON.stringify(colorAnalysis, null, 2));

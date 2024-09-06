@@ -644,11 +644,12 @@ export default function StyleflowApp() {
                             <Palette className="mr-2 text-[#d4af37]" />
                             Combinações de Cores Recomendadas
                           </h3>
-                          {colorAnalysis && colorAnalysis.combinacoes_cores ? (
+                          {colorAnalysis && colorAnalysis.combinacoes_cores && colorAnalysis.combinacoes_cores.length > 0 ? (
                             <ul className="space-y-2">
                               {colorAnalysis.combinacoes_cores.map((combinacao, index) => (
                                 <li key={index} className="text-stone-700">
-                                  {combinacao}
+                                  <strong>{combinacao.descricao}:</strong>{' '}
+                                  {combinacao.cores.join(', ')}
                                 </li>
                               ))}
                             </ul>
@@ -669,10 +670,11 @@ export default function StyleflowApp() {
                                 </DialogDescription>
                               </DialogHeader>
                               <div className="grid gap-4 py-4">
-                                {colorAnalysis && colorAnalysis.combinacoes_cores ? (
+                                {colorAnalysis && colorAnalysis.combinacoes_cores && colorAnalysis.combinacoes_cores.length > 0 ? (
                                   colorAnalysis.combinacoes_cores.map((combinacao, index) => (
                                     <Card key={index} className="p-4">
-                                      <p>{combinacao}</p>
+                                      <p><strong>{combinacao.descricao}:</strong>{' '}
+                                      {combinacao.cores.join(', ')}</p>
                                     </Card>
                                   ))
                                 ) : (
