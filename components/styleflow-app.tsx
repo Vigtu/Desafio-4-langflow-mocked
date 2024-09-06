@@ -37,10 +37,9 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { toast } from "@/components/ui/use-toast"
 
 import { uploadImageToBytescale, analyzeImage } from '../api'
-import { ColorAnalysis, VirtualTryOnResult, APIRecommendation } from "@/api/types"
+import { ColorAnalysis, APIRecommendation } from "@/api/types"
 import { usePreferences } from '@/hooks/usePreferences'
 import { getRecommendations } from '@/api/recommendationAPI'
-import LoopEffect from '@/components/ui/LoopEffect'
 import { callTryOnAPI } from '@/api/tryOnAPI'
 
 // Componente de loading simples

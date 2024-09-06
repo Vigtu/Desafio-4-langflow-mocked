@@ -32,11 +32,11 @@ export interface ColorAnalysis {
   tips?: string // Use ? para tornar opcional se necessário
 }
 
-export interface Recommendation {
-  id: number
-  name: string
-  price: number
-  image: string
-}
 
-export type VirtualTryOnResult = string
+// Adicionando a interface APIRecommendation
+export interface APIRecommendation {
+  name: string;
+  link: string;
+  image: string;
+  price: number;
+}

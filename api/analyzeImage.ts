@@ -58,7 +58,7 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
     const openAIData = JSON.parse(openAIAnalysis);
     const anthropicData = JSON.parse(anthropicAnalysis);
 
-    // Criando o objeto ColorAnalysis com os dados das análises
+    // Aqui é onde o openAIData é usado para criar o colorAnalysis
     const colorAnalysis: ColorAnalysis = {
       colorPaletteNeutras: openAIData.analise_colorimetrica.paleta_recomendada.cores_neutras.map((cor: any) => cor.rgb_hex),
       colorPaletteBasicas: openAIData.analise_colorimetrica.paleta_recomendada.cores_basicas.map((cor: any) => cor.rgb_hex),
