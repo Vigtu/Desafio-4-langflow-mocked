@@ -36,7 +36,7 @@ import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { toast } from "@/components/ui/use-toast"
 
-import { uploadImageToBytescale, analyzeImage, mockRecommendationAPI, mockVirtualTryOnAPI } from '../api'
+import { uploadImageToBytescale, analyzeImage } from '../api'
 import { ColorAnalysis, Recommendation, VirtualTryOnResult, APIRecommendation } from "@/api/types"
 import { usePreferences } from '@/hooks/usePreferences'
 import { getRecommendations } from '@/api/recommendationAPI'
