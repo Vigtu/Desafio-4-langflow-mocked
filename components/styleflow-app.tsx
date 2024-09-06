@@ -75,11 +75,6 @@ export default function StyleflowApp() {
   const [showPreferences, setShowPreferences] = useState(false)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
   const [showSeasonalInfo, setShowSeasonalInfo] = useState(false)
-  const [mockOutfitRecommendations] = useState([
-    { name: 'Casual Chic', items: ['Blusa branca', 'Calça bege', 'Acessórios dourados'] },
-    { name: 'Elegância Noturna', items: ['Vestido verde', 'Clutch dourada', 'Saltos nude'] },
-  ])
-  const [mockAccessoryRecommendations] = useState(['Colar dourado', 'Relógio de couro', 'Lenço de seda'])
   const { preferences, updatePreference, getPreferencesString, skipQuiz } = usePreferences()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -205,7 +200,12 @@ export default function StyleflowApp() {
     setIsVirtualTryOnLoading(true)
     try {
       console.log("Iniciando prova virtual com:", uploadedImageUrl, selectedProduct.image)
-      const tryOnResult = await callTryOnAPI(uploadedImageUrl, selectedProduct.image)
+      
+      // Garantir que as URLs estão corretas
+      const userImageUrl = new URL(uploadedImageUrl).toString()
+      const productImageUrl = new URL(selectedProduct.image).toString()
+
+      const tryOnResult = await callTryOnAPI(userImageUrl, productImageUrl)
       console.log("Resultado da prova virtual:", tryOnResult)
       setVirtualTryOnImage(tryOnResult)
       toast({
@@ -1114,7 +1114,7 @@ export default function StyleflowApp() {
           </div>
           <div className="flex justify-between">
             <Button
-              onClick={() => selectedProduct && window.open(selectedProduct.link, '_blank')}
+              onClick={() => window.open(selectedProduct?.link, '_blank')}
               className="bg-[#d4af37] hover:bg-[#b8963c] text-white"
             >
               Ver Produto
