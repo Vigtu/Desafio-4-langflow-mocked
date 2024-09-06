@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Upload, Camera, Loader2, ArrowRight, User, Lock, Mail, Palette, Shirt, Watch, Info, Sun, Snowflake, Leaf, Cloud, ChevronUp, ChevronDown, DollarSign, Eye, ShoppingBag, Settings, Calendar, MapPin, Home, Palmtree, Umbrella, Building2, Mountain, Sunrise, Sunset, Clock, Wind, Dumbbell, Moon, Music, Briefcase, Coffee, Droplets, X } from 'lucide-react'
+import { Upload, Camera, Loader2, ArrowRight, User, Lock, Mail, Palette, Shirt, Watch, Info, Sun, Snowflake, Leaf, Cloud, ChevronUp, ChevronDown, DollarSign, Eye, ShoppingBag, Settings, Calendar, MapPin, Home, Palmtree, Umbrella, Building2, Mountain, Sunrise, Sunset, Clock, Wind, Dumbbell, Moon, Music, Briefcase, Coffee, Droplets, X, Palette as PaletteIcon, Contrast as ContrastIcon, Droplet as DropletIcon, Sun as SunIcon, Shirt as ShirtIcon, Scissors as ScissorsIcon } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -766,36 +766,103 @@ export default function StyleflowApp() {
             </AnimatePresence>
 
             <AnimatePresence>
-              {showDetailedAnalysis && (
+              {showDetailedAnalysis && colorAnalysis && (
                 <motion.div
                   initial={{ opacity: 0, x: '100%' }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: '100%' }}
                   transition={{ type: 'tween', duration: 0.5 }}
-                  className="fixed inset-y-0 right-0 w-full sm:w-2/3 md:w-1/2 lg:w-1/3 bg-white shadow-lg z-50 overflow-y-auto"
+                  className="fixed inset-y-0 right-0 w-full sm:w-2/3 md:w-1/2 lg:w-1/3 bg-white shadow-lg z-50 overflow-hidden"
                 >
-                  <div className="p-6">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="absolute top-4 right-4"
-                      onClick={() => setShowDetailedAnalysis(false)}
-                    >
-                      <X className="h-6 w-6" />
-                    </Button>
-                    <h3 className="text-2xl font-semibold mb-6">Análise Detalhada</h3>
-                    <ScrollArea className="h-[calc(100vh-100px)]">
-                      <div className="space-y-6">
+                  <div className="h-full flex flex-col">
+                    <div className="p-6 bg-[#f5e6d3] shadow-md">
+                      <div className="flex justify-between items-center">
+                        <h3 className="text-2xl font-light text-stone-800">Análise Detalhada</h3>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setShowDetailedAnalysis(false)}
+                          className="text-stone-500 hover:text-stone-700 transition-colors duration-200"
+                        >
+                          <X className="h-6 w-6" />
+                        </Button>
+                      </div>
+                    </div>
+                    <ScrollArea className="flex-grow">
+                      <div className="p-6 space-y-8">
                         <section>
-                          <h4 className="text-xl font-medium mb-3">Paleta de Cores</h4>
-                          {/* Adicione informações detalhadas da paleta de cores */}
+                          <h4 className="text-xl font-medium mb-4 flex items-center text-stone-800">
+                            <Palette className="mr-2 text-[#d4af37]" />
+                            Paleta de Cores
+                          </h4>
+                          <div className="space-y-4">
+                            {[
+                              { type: 'Neutras', colors: colorAnalysis.colorPaletteNeutras },
+                              { type: 'Básicas', colors: colorAnalysis.colorPaletteBasicas },
+                              { type: 'Destaque', colors: colorAnalysis.colorPaletteDestaque }
+                            ].map(({ type, colors }, index) => (
+                              <div key={index} className="bg-stone-100 p-4 rounded-lg">
+                                <h5 className="text-sm font-medium text-stone-700 mb-2">Cores {type}</h5>
+                                <div className="flex space-x-2">
+                                  {colors.map((color, colorIndex) => (
+                                    <div
+                                      key={colorIndex}
+                                      className="w-12 h-12 rounded-full shadow-md"
+                                      style={{ backgroundColor: color }}
+                                      title={color}
+                                    />
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </section>
-                        <Separator />
+                        <Separator className="bg-stone-200" />
                         <section>
-                          <h4 className="text-xl font-medium mb-3">Contraste</h4>
-                          {/* Adicione análise de contraste */}
+                          <h4 className="text-xl font-medium mb-4 flex items-center text-stone-800">
+                            <Sun className="mr-2 text-[#d4af37]" />
+                            Estação
+                          </h4>
+                          <div className="bg-stone-100 p-4 rounded-lg">
+                            <p className="text-lg font-medium text-stone-700 mb-2">{colorAnalysis.season}</p>
+                            <p className="text-stone-600">{colorAnalysis.seasonSummary}</p>
+                            <div className="mt-4 space-y-2">
+                              <div className="flex items-center">
+                                <span className="text-sm font-medium text-stone-700 w-20">Pele:</span>
+                                <span className="text-sm text-stone-600">{colorAnalysis.characteristics.pele}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <span className="text-sm font-medium text-stone-700 w-20">Olhos:</span>
+                                <span className="text-sm text-stone-600">{colorAnalysis.characteristics.olhos}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <span className="text-sm font-medium text-stone-700 w-20">Cabelo:</span>
+                                <span className="text-sm text-stone-600">{colorAnalysis.characteristics.cabelo}</span>
+                              </div>
+                            </div>
+                          </div>
                         </section>
-                        {/* Adicione mais seções conforme necessário */}
+                        <Separator className="bg-stone-200" />
+                        <section>
+                          <h4 className="text-xl font-medium mb-4 flex items-center text-stone-800">
+                            <Shirt className="mr-2 text-[#d4af37]" />
+                            Recomendações de Estilo
+                          </h4>
+                          <div className="bg-stone-100 p-4 rounded-lg space-y-4">
+                            {Object.entries(colorAnalysis.recommendations).map(([category, recs], index) => (
+                              <div key={index}>
+                                <h5 className="text-sm font-medium text-stone-700 mb-2 capitalize">{category}</h5>
+                                <ul className="list-disc list-inside space-y-1">
+                                  {Array.isArray(recs) ? recs.map((rec, recIndex) => (
+                                    <li key={recIndex} className="text-stone-600">{rec}</li>
+                                  )) : (
+                                    <li className="text-stone-600">{String(recs)}</li>
+                                  )}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        </section>
                       </div>
                     </ScrollArea>
                   </div>
