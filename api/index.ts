@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { ColorAnalysis, Recommendation, VirtualTryOnResult } from "@/api/types"
+import { ColorAnalysis } from "@/api/types"
 
 export async function uploadImageToBytescale(file: File) {
   const apiKey = 'public_12a1z6L5BQgxbkjEyEUDys4YE79e'
@@ -108,34 +108,6 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
     }
     throw error;
   }
-}
-
-// Mock API functions
-export const mockColorAnalysisAPI = async (imageFile: File): Promise<ColorAnalysis> => {
-  await new Promise(resolve => setTimeout(resolve, 2000))
-  return {
-    colorPalette: ['#F5E6D3', '#D4AF37', '#8FBC8F', '#E6D7C3', '#7AA37A'],
-    season: 'Outono',
-    characteristics: {
-      pele: 'Tons quentes',
-      olhos: 'Castanhos',
-      cabelo: 'Cores ricas'
-    },
-    tips: 'Abrace cores quentes e ricas como vermelhos profundos...'
-  }
-}
-
-export const mockRecommendationAPI = async (colorAnalysis: ColorAnalysis, filters: any): Promise<Recommendation[]> => {
-  await new Promise(resolve => setTimeout(resolve, 1500))
-  return [
-    { id: 1, name: 'Blusa Elegante', price: 79.99, image: '/placeholder.svg?height=400&width=300&text=Blusa+Elegante' },
-    // ... (other recommendations)
-  ]
-}
-
-export const mockVirtualTryOnAPI = async (userImage: string, clothingImage: string): Promise<VirtualTryOnResult> => {
-  await new Promise(resolve => setTimeout(resolve, 2000))
-  return '/placeholder.svg?height=600&width=400&text=Prova+Virtual'
 }
 
 function extractArtifactMessages(jsonResponse: any) {
