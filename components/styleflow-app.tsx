@@ -1198,11 +1198,11 @@ export default function StyleflowApp() {
                       className="overflow-hidden transition-all duration-300 hover:shadow-lg group cursor-pointer relative"
                       onClick={() => handleProductClick(item)}
                     >
-                      <div className="relative overflow-hidden">
+                      <div className="relative overflow-hidden bg-[#f3f3f3]">
                         <img
                           src={item.image}
                           alt={item.name}
-                          className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+                          className="w-full h-48 object-contain transition-transform duration-300 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                           <motion.div

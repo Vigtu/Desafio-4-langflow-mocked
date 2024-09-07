@@ -25,35 +25,44 @@ export async function uploadImageToBytescale(file: File) {
 }
 
 export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
-  const url = "https://langflow.insyncautomation.online/api/v1/run/419cc051-ca26-44b6-8416-c85c1bfcd09f?stream=false"
+  console.log('Iniciando análise da imagem...');
+  const url = "https://langflow.insyncautomation.online/api/v1/run/419cc051-ca26-44b6-8416-c85c1bfcd09f?stream=false";
   const headers = {
     'Content-Type': 'application/json',
     'x-api-key': 'sk--qsZcqmQJKio9bx_O0WlQSgly11AA8XfbkZQQNo-sjU'
-  }
+  };
   const data = {
     "input_value": imageUrl,
     "output_type": "chat",
     "input_type": "chat",
     "tweaks": {
-      // ... (tweaks object)
+      // ... (mantenha os tweaks existentes)
     }
-  }
+  };
 
   try {
     console.log("Enviando requisição para análise com a URL da imagem:", imageUrl);
     const response = await axios.post(url, data, { headers });
     console.log("Resposta recebida da API de análise:", JSON.stringify(response.data, null, 2));
 
-    const { openAIAnalysis, anthropicAnalysis } = extractArtifactMessages(response.data);
+    const apiResponse = extractArtifactMessages(response.data);
 
-    console.log("Análise OpenAI:", openAIAnalysis);
-    console.log("Análise Anthropic:", anthropicAnalysis);
+    if (!apiResponse || !apiResponse.outputs || !apiResponse.outputs[0] || !apiResponse.outputs[0].outputs) {
+      throw new Error("Resposta da API inválida ou incompleta");
+    }
 
-    // Parse da análise OpenAI
-    const openAIData = JSON.parse(openAIAnalysis);
-    const analiseColorimetrica = openAIData.analise_colorimetrica;
+    const analysisText = apiResponse.outputs[0].outputs[0].results.message.data.text;
+    console.log("Texto da análise:", analysisText);
 
-    // Simplificando a extração de dados
+    const analysisData = JSON.parse(analysisText);
+
+    if (!analysisData.analise_colorimetrica) {
+      throw new Error("Dados de análise colorimétrica não encontrados na resposta");
+    }
+
+    const analiseColorimetrica = analysisData.analise_colorimetrica;
+
+    // Construa o objeto ColorAnalysis com os dados da análise
     const colorAnalysis: ColorAnalysis = {
       colorPaletteNeutras: analiseColorimetrica.paleta_recomendada.cores_neutras.map((cor: any) => ({
         name: cor.nome,
@@ -95,12 +104,11 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
 
 function extractArtifactMessages(jsonResponse: any) {
   try {
-    const openAIAnalysis = jsonResponse.outputs[0].outputs[0].artifacts.message
-    const anthropicAnalysis = jsonResponse.outputs[0].outputs[1].artifacts.message
-    return { openAIAnalysis, anthropicAnalysis }
+    console.log("Resposta completa da API:", JSON.stringify(jsonResponse, null, 2));
+    return jsonResponse;
   } catch (error) {
-    console.error("Erro ao acessar as mensagens no caminho especificado:", error)
-    return { openAIAnalysis: null, anthropicAnalysis: null }
+    console.error("Erro ao processar a resposta da API:", error);
+    return null;
   }
 }
 
