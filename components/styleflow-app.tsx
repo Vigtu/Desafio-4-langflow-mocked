@@ -308,15 +308,21 @@ export default function StyleflowApp() {
       // Simular um atraso de carregamento
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Selecionar uma imagem mock aleatória
-      const randomIndex = Math.floor(Math.random() * mockImagesTryOn.length);
-      const mockTryOnImage = mockImagesTryOn[randomIndex];
+      // Determinar o grid com base no índice do produto selecionado
+      const gridIndex = apiRecommendations.findIndex(item => item === selectedProduct) + 1;
+      
+      // Encontrar a imagem correspondente ao grid
+      const mockTryOnImage = mockImagesTryOn.find(item => item.grid === gridIndex);
 
-      setVirtualTryOnImage(mockTryOnImage)
-      toast({
-        title: "Prova virtual concluída",
-        description: "Sua imagem de prova virtual está pronta!",
-      })
+      if (mockTryOnImage) {
+        setVirtualTryOnImage(mockTryOnImage.image)
+        toast({
+          title: "Prova virtual concluída",
+          description: "Sua imagem de prova virtual está pronta!",
+        })
+      } else {
+        throw new Error("Imagem de prova virtual não encontrada para este item.")
+      }
     } catch (error) {
       console.error('Erro durante a prova virtual:', error)
       toast({
