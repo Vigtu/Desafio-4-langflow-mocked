@@ -73,7 +73,7 @@ export default function StyleflowApp() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [showPreferences, setShowPreferences] = useState(false)
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null)
-  const [showSeasonalInfo, setShowSeasonalInfo] = useState(false)
+  const [showSeasonalInfo, setShowSeasonalInfo] = useState(true)
   const { preferences, updatePreference, getPreferencesString, skipQuiz } = usePreferences()
   const [isLoading, setIsLoading] = useState(false)
   const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false)
@@ -117,6 +117,7 @@ export default function StyleflowApp() {
       setStage('analysis')
       setActiveTab('analysis')
       setAnalysisComplete(true)
+      setShowSeasonalInfo(true)
 
       toast({
         title: "Análise de foto concluída",
@@ -641,7 +642,7 @@ export default function StyleflowApp() {
                           </div>
                         ))}
                       </div>
-                      <p className="text-sm text-stone-600 mt-4">Passe o mouse sobre uma cor para ver seu código</p>
+                      <p className="text-sm text-stone-500 mt-4">Passe o mouse sobre uma cor para ver seu código</p>
                       <Button
                         onClick={toggleSeasonalInfo}
                         className="mt-4 bg-[#d4af37] hover:bg-[#b8963c] text-white transition-colors duration-300"
@@ -651,7 +652,34 @@ export default function StyleflowApp() {
                     </motion.div>
                   </div>
                   <AnimatePresence mode="wait">
-                    {!showSeasonalInfo && (
+                    {showSeasonalInfo ? (
+                      <motion.div
+                        key="seasonal-info"
+                        initial={{ opacity: 0, x: 100 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 100 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <Card className="p-6 mb-8">
+                          <h3 className="text-2xl font-light mb-4 text-stone-800 flex items-center justify-center">
+                            {colorAnalysis.season === 'Inverno' && <Snowflake className="w-6 h-6 text-blue-500 mr-2" />}
+                            {colorAnalysis.season === 'Primavera' && <Cloud className="w-6 h-6 text-pink-500 mr-2" />}
+                            {colorAnalysis.season === 'Verão' && <Sun className="w-6 h-6 text-yellow-500 mr-2" />}
+                            {colorAnalysis.season === 'Outono' && <Leaf className="w-6 h-6 text-orange-500 mr-2" />}
+                            <span>Sua Estação: {colorAnalysis.season}</span>
+                          </h3>
+                          <p className="text-stone-700 mb-4">{colorAnalysis.seasonSummary}</p>
+                          <h4 className="text-xl font-light mb-2 text-stone-800">Características:</h4>
+                          <ul className="list-disc list-inside mb-4">
+                            <li>Pele: {colorAnalysis.characteristics.pele}</li>
+                            <li>Olhos: {colorAnalysis.characteristics.olhos}</li>
+                            <li>Cabelo: {colorAnalysis.characteristics.cabelo}</li>
+                          </ul>
+                          <h4 className="text-lg font-semibold mb-2">Justificativa:</h4>
+                          <p className="text-stone-700">{colorAnalysis.justification}</p>
+                        </Card>
+                      </motion.div>
+                    ) : (
                       <motion.div
                         key="recommendations"
                         initial={{ opacity: 0, x: -100 }}
@@ -715,34 +743,6 @@ export default function StyleflowApp() {
                               <li key={index} className="text-stone-700">{color}</li>
                             ))}
                           </ul>
-                        </Card>
-                      </motion.div>
-                    )}
-                    {showSeasonalInfo && (
-                      <motion.div
-                        key="seasonal-info"
-                        initial={{ opacity: 0, x: 100 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 100 }}
-                        transition={{ duration: 0.5 }}
-                      >
-                        <Card className="p-6 mb-8">
-                          <h3 className="text-2xl font-light mb-4 text-stone-800 flex items-center justify-center">
-                            {colorAnalysis.season === 'Inverno' && <Snowflake className="w-6 h-6 text-blue-500 mr-2" />}
-                            {colorAnalysis.season === 'Primavera' && <Cloud className="w-6 h-6 text-pink-500 mr-2" />}
-                            {colorAnalysis.season === 'Verão' && <Sun className="w-6 h-6 text-yellow-500 mr-2" />}
-                            {colorAnalysis.season === 'Outono' && <Leaf className="w-6 h-6 text-orange-500 mr-2" />}
-                            <span>Sua Estação: {colorAnalysis.season}</span>
-                          </h3>
-                          <p className="text-stone-700 mb-4">{colorAnalysis.seasonSummary}</p>
-                          <h4 className="text-xl font-light mb-2 text-stone-800">Características:</h4>
-                          <ul className="list-disc list-inside mb-4">
-                            <li>Pele: {colorAnalysis.characteristics.pele}</li>
-                            <li>Olhos: {colorAnalysis.characteristics.olhos}</li>
-                            <li>Cabelo: {colorAnalysis.characteristics.cabelo}</li>
-                          </ul>
-                          <h4 className="text-lg font-semibold mb-2">Justificativa:</h4>
-                          <p className="text-stone-700">{colorAnalysis.justification}</p>
                         </Card>
                       </motion.div>
                     )}
