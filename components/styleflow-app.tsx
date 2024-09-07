@@ -101,6 +101,85 @@ export default function StyleflowApp() {
   const { preferences, updatePreference, getPreferencesString, skipQuiz } = usePreferences()
   const [isLoading, setIsLoading] = useState(false)
   const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false)
+  const [chatMessage, setChatMessage] = useState('')
+  const [isChatSent, setIsChatSent] = useState(false)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+  const [placeholderIndex, setPlaceholderIndex] = useState(0)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const placeholders = [
+    "Look casual para o escritório",
+    "Outfit para casamento, orçamento médio",
+    "Roupa elegante para jantar importante",
+    "Estilo confortável para viagem longa"
+  ]
+
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.focus()
+    }
+
+    const interval = setInterval(() => {
+      setPlaceholderIndex((prevIndex) => (prevIndex + 1) % placeholders.length)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleChatSend = async () => {
+    if (chatMessage.trim()) {
+      setIsChatSent(true)
+      setIsLoading(true)
+      try {
+        const preferencesString = chatMessage.trim()
+        const filteredResponse = await getRecommendations(JSON.stringify(colorAnalysis), preferencesString)
+        const extractedRecommendations = extractRecommendationsFromResponse(filteredResponse)
+        setApiRecommendations(extractedRecommendations)
+        setPreferencesComplete(true)
+        setActiveTab('recommendations')
+        toast({
+          title: "Preferências enviadas",
+          description: "Suas preferências foram registradas com sucesso.",
+        })
+      } catch (error) {
+        console.error('Erro ao gerar recomendações:', error)
+        toast({
+          title: "Erro",
+          description: "Falha ao gerar recomendações. Por favor, tente novamente.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoading(false)
+        setTimeout(() => setIsTransitioning(true), 1000)
+      }
+    }
+  }
+
+  const handleChatSkip = async () => {
+    setIsLoading(true)
+    try {
+      const preferencesString = " " // String vazia para preferências
+      const filteredResponse = await getRecommendations(JSON.stringify(colorAnalysis), preferencesString)
+      const extractedRecommendations = extractRecommendationsFromResponse(filteredResponse)
+      setApiRecommendations(extractedRecommendations)
+      setPreferencesComplete(true)
+      setActiveTab('recommendations')
+      toast({
+        title: "Preferências ignoradas",
+        description: "Você optou por pular esta etapa.",
+      })
+    } catch (error) {
+      console.error('Erro ao gerar recomendações:', error)
+      toast({
+        title: "Erro",
+        description: "Falha ao gerar recomendações. Por favor, tente novamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+      setIsTransitioning(true)
+    }
+  }
 
   // Adicionando um useEffect para logar as recomendações
   useEffect(() => {
@@ -775,8 +854,7 @@ export default function StyleflowApp() {
                 <motion.div
                   initial={{ opacity: 0, x: '100%' }}
                   animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: '100%' }}
-                  transition={{ type: 'tween', duration: 0.5 }}
+                  exit={{ opacity: 0, x: '100%' }}                  transition={{ type: 'tween', duration: 0.5 }}
                   className="fixed inset-y-0 right-0 w-full sm:w-2/3 md:w-1/2 lg:w-1/3 bg-white shadow-lg z-50 overflow-hidden"
                 >
                   <div className="h-full flex flex-col">
@@ -889,26 +967,26 @@ export default function StyleflowApp() {
         </TabsContent>
 
         <TabsContent value="preferences">
-          <Card className="p-8 bg-white shadow-lg rounded-2xl min-h-[calc(100vh-300px)]">
-            <h2 className="text-3xl font-light mb-8 text-center text-stone-800">Preferências de Estilo</h2>
+          <Card className="p-8 bg-white shadow-lg rounded-2xl min-h-[calc(100vh-300px)] flex flex-col justify-center items-center">
+            <h2 className="text-4xl font-light mb-12 text-center text-stone-800">Suas Preferências</h2>
             
             <AnimatePresence>
               {!showPreferences && (
                 <motion.div 
                   initial={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex justify-center space-x-4 mb-8"
+                  className="flex justify-center space-x-6 mb-12"
                 >
                   <Button
                     onClick={() => setShowPreferences(true)}
-                    className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
+                    className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-8 py-4 text-lg rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
                   >
-                    <Settings className="mr-2 h-5 w-5" />
+                    <Settings className="mr-3 h-6 w-6" />
                     Personalizar Minhas Preferências
                   </Button>
                   <Button
                     onClick={handleContinueToRecommendations}
-                    className="bg-[#8fbc8f] hover:bg-[#7aa37a] text-white px-6 py-3 rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
+                    className="bg-[#8fbc8f] hover:bg-[#7aa37a] text-white px-8 py-4 text-lg rounded-full transition-all duration-300 shadow-md hover:shadow-lg flex items-center"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -916,7 +994,7 @@ export default function StyleflowApp() {
                     ) : (
                       <>
                         Continuar e Ver Recomendações
-                        <ArrowRight className="ml-2 h-5 w-5" />
+                        <ArrowRight className="ml-3 h-6 w-6" />
                       </>
                     )}
                   </Button>
@@ -931,249 +1009,87 @@ export default function StyleflowApp() {
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.5 }}
+                  className="w-full max-w-2xl"
                 >
-                  <Accordion type="single" collapsible className="w-full mb-8">
-                    <AccordionItem value="price">
-                      <AccordionTrigger>
-                        <DollarSign className="w-5 h-5 mr-2" />
-                        Faixa de Preço
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-4">
-                          <Label htmlFor="price-range" className="text-stone-700 mb-2 block">
-                            Faixa de Preço: R${preferences.priceRange[0]} - R${preferences.priceRange[1]}
-                          </Label>
-                          <Slider
-                            id="price-range"
-                            min={0}
-                            max={500}
-                            step={10}
-                            value={preferences.priceRange}
-                            onValueChange={(value) => updatePreference('priceRange', value)}
-                            className="mb-4"
-                          />
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="occasion">
-                      <AccordionTrigger>
-                        <Calendar className="w-5 h-5 mr-2" />
-                        Ocasião
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-4">
-                          <Label htmlFor="occasion" className="text-stone-700">Ocasião</Label>
-                          <Select value={preferences.occasion} onValueChange={(value) => updatePreference('occasion', value)}>
-                            <SelectTrigger id="occasion">
-                              <SelectValue placeholder="Selecione uma ocasião" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="casual">
-                                <div className="flex items-center">
-                                  <Coffee className="w-4 h-4 mr-2" />
-                                  Casual
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="formal">
-                                <div className="flex items-center">
-                                  <Briefcase className="w-4 h-4 mr-2" />
-                                  Formal
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="sport">
-                                <div className="flex items-center">
-                                  <Dumbbell className="w-4 h-4 mr-2" />
-                                  Esportivo
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="evening">
-                                <div className="flex items-center">
-                                  <Moon className="w-4 h-4 mr-2" />
-                                  Noite
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="party">
-                                <div className="flex items-center">
-                                  <Music className="w-4 h-4 mr-2" />
-                                  Festa
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="work">
-                                <div className="flex items-center">
-                                  <Briefcase className="w-4 h-4 mr-2" />
-                                  Trabalho
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Input
-                            id="detailed-occasion"
-                            placeholder="Especifique uma ocasião detalhada (ex: Primeiro Encontro, Reunião de Negócios)"
-                            value={preferences.detailedOccasion}
-                            onChange={(e) => updatePreference('detailedOccasion', e.target.value)}
-                          />
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="location">
-                      <AccordionTrigger>
-                        <MapPin className="w-5 h-5 mr-2" />
-                        Localização
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-4">
-                          <Label htmlFor="location" className="text-stone-700">Localização</Label>
-                          <Select value={preferences.location} onValueChange={(value) => updatePreference('location', value)}>
-                            <SelectTrigger id="location">
-                              <SelectValue placeholder="Selecione uma localização" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="indoor">
-                                <div className="flex items-center">
-                                  <Home className="w-4 h-4 mr-2" />
-                                  Ambiente Interno
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="outdoor">
-                                <div className="flex items-center">
-                                  <Palmtree className="w-4 h-4 mr-2" />
-                                  Ambiente Externo
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="beach">
-                                <div className="flex items-center">
-                                  <Umbrella className="w-4 h-4 mr-2" />
-                                  Praia
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="city">
-                                <div className="flex items-center">
-                                  <Building2 className="w-4 h-4 mr-2" />
-                                  Cidade
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="countryside">
-                                <div className="flex items-center">
-                                  <Mountain className="w-4 h-4 mr-2" />
-                                  Campo
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="weather">
-                      <AccordionTrigger>
-                        <Cloud className="w-5 h-5 mr-2" />
-                        Clima
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-4">
-                          <Label htmlFor="weather" className="text-stone-700">Clima</Label>
-                          <Select value={preferences.weather} onValueChange={(value) => updatePreference('weather', value)}>
-                            <SelectTrigger id="weather">
-                              <SelectValue placeholder="Selecione as condições climáticas" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="warm">
-                                <div className="flex items-center">
-                                  <Sun className="w-4 h-4 mr-2" />
-                                  Quente
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="cold">
-                                <div className="flex items-center">
-                                  <Snowflake className="w-4 h-4 mr-2" />
-                                  Frio
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="humid">
-                                <div className="flex items-center">
-                                  <Droplets className="w-4 h-4 mr-2" />
-                                  Úmido
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="dry">
-                                <div className="flex items-center">
-                                  <Wind className="w-4 h-4 mr-2" />
-                                  Seco
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                    <AccordionItem value="time">
-                      <AccordionTrigger>
-                        <Clock className="w-5 h-5 mr-2" />
-                        Horário
-                      </AccordionTrigger>
-                      <AccordionContent>
-                        <div className="space-y-4">
-                          <Label htmlFor="time" className="text-stone-700">Horário do Dia</Label>
-                          <Select value={preferences.time} onValueChange={(value) => updatePreference('time', value)}>
-                            <SelectTrigger id="time">
-                              <SelectValue placeholder="Selecione o horário do dia" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="morning">
-                                <div className="flex items-center">
-                                  <Sunrise className="w-4 h-4 mr-2" />
-                                  Manhã
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="afternoon">
-                                <div className="flex items-center">
-                                  <Sun className="w-4 h-4 mr-2" />
-                                  Tarde
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="evening">
-                                <div className="flex items-center">
-                                  <Sunset className="w-4 h-4 mr-2" />
-                                  Noite
-                                </div>
-                              </SelectItem>
-                              <SelectItem value="all-day">
-                                <div className="flex items-center">
-                                  <Clock className="w-4 h-4 mr-2" />
-                                  O Dia Todo
-                                </div>
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <Input
-                            id="exact-time"
-                            type="time"
-                            value={preferences.exactTime}
-                            onChange={(e) => updatePreference('exactTime', e.target.value)}
-                            placeholder="Especifique um horário exato (opcional)"
-                          />
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
+                  <div className="flex flex-col items-center space-y-8">
+                    <motion.p 
+                      className="text-center text-stone-600 mb-6 text-xl"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.2 }}
+                    >
+                      Descreva brevemente o estilo ou ocasião que você busca.
+                    </motion.p>
+                    <motion.div 
+                      className="w-full relative"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.4, type: "spring", stiffness: 100 }}
+                    >
+                      <Input
+                        ref={inputRef}
+                        type="text"
+                        placeholder={placeholders[placeholderIndex]}
+                        value={chatMessage}
+                        onChange={(e) => setChatMessage(e.target.value)}
+                        className="pr-32 pl-6 py-8 text-xl rounded-full border-2 border-[#d4af37] focus:ring-2 focus:ring-[#8fbc8f] transition-all duration-300"
+                        disabled={isChatSent}
+                      />
+                      <Button
+                        onClick={handleChatSend}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 bg-[#d4af37] hover:bg-[#b8963c] text-white text-lg rounded-full transition-all duration-300 h-[calc(100%-8px)]"
+                        disabled={isChatSent || isLoading}
+                      >
+                        {isLoading ? <SimpleLoading /> : 'Enviar'}
+                      </Button>
+                    </motion.div>
+                    {!isChatSent && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                      >
+                        <Button
+                          onClick={handleChatSkip}
+                          variant="outline"
+                          className="mt-6 border-2 border-[#d4af37] text-[#d4af37] hover:bg-[#d4af37] hover:text-white transition-all duration-300 text-lg px-8 py-4 rounded-full"
+                          disabled={isLoading}
+                        >
+                          Pular esta etapa
+                        </Button>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {isTransitioning && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ duration: 0.8, type: "spring", stiffness: 100, damping: 15 }}
+                  className="flex flex-col items-center justify-center space-y-12 mt-16"
+                >
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.2, duration: 0.5 }}
+                    className="text-2xl text-stone-600 text-center"
+                  >
+                    Preferências registradas com sucesso!
+                  </motion.p>
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    className="flex justify-center"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.4, duration: 0.5 }}
                   >
                     <Button 
-                      onClick={handlePreferencesSubmit} 
-                      className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-8 py-3 text-lg rounded-full"
-                      disabled={isLoading}
+                      onClick={() => setActiveTab('recommendations')}
+                      className="bg-[#d4af37] hover:bg-[#b8963c] text-white px-10 py-5 text-xl rounded-full transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
                     >
-                      {isLoading ? (
-                        <SimpleLoading />
-                      ) : (
-                        <>
-                          Ver Recomendações
-                          <ArrowRight className="ml-2 h-5 w-5" />
-                        </>
-                      )}
+                      Ver Recomendações
                     </Button>
                   </motion.div>
                 </motion.div>
