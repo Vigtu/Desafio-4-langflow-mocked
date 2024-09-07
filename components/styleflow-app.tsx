@@ -40,7 +40,7 @@ import { uploadImageToBytescale, analyzeImage } from '../api'
 import { ColorAnalysis, APIRecommendation } from "@/api/types"
 import { usePreferences } from '@/hooks/usePreferences'
 import { getRecommendations } from '@/api/recommendationAPI'
-import { callTryOnAPI } from '@/api/tryOnAPI'
+import { mockImagesTryOn } from '@/utils/mockImagesTryOn'
 
 // Componente de loading simples
 const SimpleLoading = () => (
@@ -199,15 +199,16 @@ export default function StyleflowApp() {
     setShowVirtualTryOn(true)
     setIsVirtualTryOnLoading(true)
     try {
-      console.log("Iniciando prova virtual com:", uploadedImageUrl, selectedProduct.image)
+      console.log("Simulando prova virtual com:", uploadedImageUrl, selectedProduct.image)
       
-      // Garantir que as URLs estão corretas
-      const userImageUrl = new URL(uploadedImageUrl).toString()
-      const productImageUrl = new URL(selectedProduct.image).toString()
+      // Simular um atraso de carregamento
+      await new Promise(resolve => setTimeout(resolve, 2000));
 
-      const tryOnResult = await callTryOnAPI(userImageUrl, productImageUrl)
-      console.log("Resultado da prova virtual:", tryOnResult)
-      setVirtualTryOnImage(tryOnResult)
+      // Selecionar uma imagem mock aleatória
+      const randomIndex = Math.floor(Math.random() * mockImagesTryOn.length);
+      const mockTryOnImage = mockImagesTryOn[randomIndex];
+
+      setVirtualTryOnImage(mockTryOnImage)
       toast({
         title: "Prova virtual concluída",
         description: "Sua imagem de prova virtual está pronta!",
