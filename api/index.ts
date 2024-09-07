@@ -53,51 +53,33 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
     const openAIData = JSON.parse(openAIAnalysis);
     const analiseColorimetrica = openAIData.analise_colorimetrica;
 
-    // Extrair características de forma dinâmica
-    const characteristics = {
-      pele: analiseColorimetrica.caracteristicas.pele || '',
-      olhos: analiseColorimetrica.caracteristicas.olhos || '',
-      cabelo: analiseColorimetrica.caracteristicas.cabelo || '',
-    };
-
-    const colorPaletteNeutras = analiseColorimetrica.paleta_recomendada.cores_neutras.map((cor: any) => cor.rgb_hex);
-    const colorPaletteBasicas = analiseColorimetrica.paleta_recomendada.cores_basicas.map((cor: any) => cor.rgb_hex);
-    const colorPaletteDestaque = analiseColorimetrica.paleta_recomendada.cores_destaque.map((cor: any) => cor.rgb_hex);
-    
-    const season = analiseColorimetrica.classificacao.estacao;
-    const seasonSubtype = analiseColorimetrica.classificacao.subtipo;
-    const seasonTone = analiseColorimetrica.classificacao.tom;
-    const seasonIntensity = analiseColorimetrica.classificacao.intensidade;
-    
-    const seasonSummary = analiseColorimetrica.resumo_classificacao;
-    const generalSummary = analiseColorimetrica.resumo_geral;
-    const justification = analiseColorimetrica.justificativa;
-    
-    const recommendations = analiseColorimetrica.recomendacoes;
-    const colorsToAvoid = analiseColorimetrica.cores_evitar;
-    const recommendationsSummary = analiseColorimetrica.resumo_recomendacoes;
-    const exampleLooks = analiseColorimetrica.exemplos_looks;
-    const makeupRoutine = analiseColorimetrica.rotina_maquiagem;
-
-    // Criando o objeto ColorAnalysis com os dados extraídos
+    // Simplificando a extração de dados
     const colorAnalysis: ColorAnalysis = {
-      colorPaletteNeutras,
-      colorPaletteBasicas,
-      colorPaletteDestaque,
-      season,
-      seasonSubtype,
-      seasonTone,
-      seasonIntensity,
-      seasonSummary,
-      generalSummary,
-      justification,
-      characteristics,
-      recommendations,
-      colorsToAvoid,
-      recommendationsSummary,
-      exampleLooks,
-      makeupRoutine,
-      combinacoes_cores: analiseColorimetrica.combinacoes_cores || [] // Adicionando esta linha
+      colorPaletteNeutras: analiseColorimetrica.paleta_recomendada.cores_neutras.map((cor: any) => ({
+        name: cor.nome,
+        hex: cor.rgb_hex
+      })),
+      colorPaletteBasicas: analiseColorimetrica.paleta_recomendada.cores_basicas.map((cor: any) => ({
+        name: cor.nome,
+        hex: cor.rgb_hex
+      })),
+      colorPaletteDestaque: analiseColorimetrica.paleta_recomendada.cores_destaque.map((cor: any) => ({
+        name: cor.nome,
+        hex: cor.rgb_hex
+      })),
+      season: analiseColorimetrica.classificacao.estacao,
+      seasonSubtype: analiseColorimetrica.classificacao.subtipo,
+      seasonTone: analiseColorimetrica.classificacao.tom,
+      seasonIntensity: analiseColorimetrica.classificacao.intensidade,
+      seasonSummary: analiseColorimetrica.resumo_classificacao,
+      generalSummary: analiseColorimetrica.resumo_geral,
+      characteristics: analiseColorimetrica.caracteristicas,
+      recommendations: analiseColorimetrica.recomendacoes,
+      colorsToAvoid: analiseColorimetrica.cores_evitar,
+      recommendationsSummary: analiseColorimetrica.resumo_recomendacoes,
+      exampleLooks: analiseColorimetrica.exemplos_looks,
+      makeupRoutine: analiseColorimetrica.rotina_maquiagem,
+      combinacoes_cores: analiseColorimetrica.combinacoes_cores || []
     };
 
     console.log("Análise de cor processada:", JSON.stringify(colorAnalysis, null, 2));

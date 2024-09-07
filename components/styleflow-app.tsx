@@ -37,7 +37,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { toast } from "@/components/ui/use-toast"
 
 import { uploadImageToBytescale, analyzeImage } from '../api'
-import { ColorAnalysis, APIRecommendation } from "@/api/types"
+import { ColorAnalysis, APIRecommendation, NamedColor } from "@/api/types"
 import { usePreferences } from '@/hooks/usePreferences'
 import { getRecommendations } from '@/api/recommendationAPI'
 import { mockImagesTryOn } from '@/utils/mockImagesTryOn'
@@ -46,6 +46,30 @@ import { mockImagesTryOn } from '@/utils/mockImagesTryOn'
 const SimpleLoading = () => (
   <div className="flex justify-center items-center">
     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d4af37]"></div>
+  </div>
+);
+
+const ColorPalette: React.FC<{ colors: NamedColor[], title: string }> = ({ colors, title }) => (
+  <div className="mb-4 flex flex-col items-center">
+    <h4 className="text-sm font-medium text-stone-700 mb-2">{title}</h4>
+    <div className="flex justify-center gap-4 w-full">
+      {colors.map((color, colorIndex) => (
+        <TooltipProvider key={colorIndex}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="w-12 h-12 rounded-full shadow-md hover:shadow-lg transition-shadow duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#d4af37]"
+                style={{ backgroundColor: color.hex }}
+                aria-label={`${title} cor ${colorIndex + 1}`}
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{color.name} | {color.hex}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ))}
+    </div>
   </div>
 );
 
@@ -619,30 +643,10 @@ export default function StyleflowApp() {
                           { title: "Cores Básicas", colors: colorAnalysis.colorPaletteBasicas },
                           { title: "Cores de Destaque", colors: colorAnalysis.colorPaletteDestaque },
                         ].map((palette, index) => (
-                          <div key={index} className="mb-4 flex flex-col items-center">
-                            <h4 className="text-sm font-medium text-stone-700 mb-2">{palette.title}</h4>
-                            <div className="flex justify-center gap-4 w-full">
-                              {palette.colors.map((color, colorIndex) => (
-                                <TooltipProvider key={colorIndex}>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <button
-                                        className="w-12 h-12 rounded-full shadow-md hover:shadow-lg transition-shadow duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#d4af37]"
-                                        style={{ backgroundColor: color }}
-                                        aria-label={`${palette.title} cor ${colorIndex + 1}`}
-                                      />
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                      <p>Código da cor: {color}</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
-                              ))}
-                            </div>
-                          </div>
+                          <ColorPalette key={index} colors={palette.colors} title={palette.title} />
                         ))}
                       </div>
-                      <p className="text-sm text-stone-500 mt-4">Passe o mouse sobre uma cor para ver seu código</p>
+                      <p className="text-sm text-stone-500 mt-4">Passe o mouse sobre uma cor para ver seu nome e código</p>
                       <Button
                         onClick={toggleSeasonalInfo}
                         className="mt-4 bg-[#d4af37] hover:bg-[#b8963c] text-white transition-colors duration-300"
@@ -675,8 +679,8 @@ export default function StyleflowApp() {
                             <li>Olhos: {colorAnalysis.characteristics.olhos}</li>
                             <li>Cabelo: {colorAnalysis.characteristics.cabelo}</li>
                           </ul>
-                          <h4 className="text-lg font-semibold mb-2">Justificativa:</h4>
-                          <p className="text-stone-700">{colorAnalysis.justification}</p>
+                          <h4 className="text-lg font-semibold mb-2">Recomendações:</h4>
+                          <p className="text-stone-700">{colorAnalysis.recommendationsSummary}</p>
                         </Card>
                       </motion.div>
                     ) : (
@@ -809,8 +813,8 @@ export default function StyleflowApp() {
                                     <div
                                       key={colorIndex}
                                       className="w-12 h-12 rounded-full shadow-md"
-                                      style={{ backgroundColor: color }}
-                                      title={color}
+                                      style={{ backgroundColor: color.hex }}
+                                      title={`${color.name} | ${color.hex}`}
                                     />
                                   ))}
                                 </div>
@@ -826,7 +830,7 @@ export default function StyleflowApp() {
                           </h4>
                           <div className="bg-stone-100 p-4 rounded-lg">
                             <p className="text-lg font-medium text-stone-700 mb-2">{colorAnalysis.season}</p>
-                            <p className="text-stone-600">{colorAnalysis.seasonSummary}</p>
+                            <p className="text-stone-600 mb-4">{colorAnalysis.seasonSummary}</p>
                             <div className="mt-4 space-y-2">
                               <div className="flex items-center">
                                 <span className="text-sm font-medium text-stone-700 w-20">Pele:</span>
@@ -840,6 +844,10 @@ export default function StyleflowApp() {
                                 <span className="text-sm font-medium text-stone-700 w-20">Cabelo:</span>
                                 <span className="text-sm text-stone-600">{colorAnalysis.characteristics.cabelo}</span>
                               </div>
+                            </div>
+                            <div className="mt-4">
+                              <h5 className="text-md font-medium text-stone-700 mb-2">Recomendações:</h5>
+                              <p className="text-stone-600">{colorAnalysis.recommendationsSummary}</p>
                             </div>
                           </div>
                         </section>

@@ -1,14 +1,19 @@
+export interface NamedColor {
+  name: string;
+  hex: string;
+}
+
 export interface ColorAnalysis {
-  colorPaletteNeutras: string[];
-  colorPaletteBasicas: string[];
-  colorPaletteDestaque: string[];
+  colorPaletteNeutras: NamedColor[];
+  colorPaletteBasicas: NamedColor[];
+  colorPaletteDestaque: NamedColor[];
   season: string;
   seasonSubtype: string;
   seasonTone: string;
   seasonIntensity: string;
   seasonSummary: string;
   generalSummary: string;
-  justification: string;
+  recommendationsSummary: string; // Adicionando esta propriedade
   characteristics: {
     pele: string;
     olhos: string;
@@ -21,7 +26,6 @@ export interface ColorAnalysis {
     cabelo: any;
   };
   colorsToAvoid: string[];
-  recommendationsSummary: string;
   exampleLooks: Array<{
     ocasiao: string;
     descricao: string;

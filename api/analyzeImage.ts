@@ -60,20 +60,29 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
 
     // Aqui é onde o openAIData é usado para criar o colorAnalysis
     const colorAnalysis: ColorAnalysis = {
-      colorPaletteNeutras: openAIData.analise_colorimetrica.paleta_recomendada.cores_neutras.map((cor: any) => cor.rgb_hex),
-      colorPaletteBasicas: openAIData.analise_colorimetrica.paleta_recomendada.cores_basicas.map((cor: any) => cor.rgb_hex),
-      colorPaletteDestaque: openAIData.analise_colorimetrica.paleta_recomendada.cores_destaque.map((cor: any) => cor.rgb_hex),
+      colorPaletteNeutras: openAIData.analise_colorimetrica.paleta_recomendada.cores_neutras.map((cor: any) => ({
+        name: cor.nome,
+        hex: cor.rgb_hex
+      })),
+      colorPaletteBasicas: openAIData.analise_colorimetrica.paleta_recomendada.cores_basicas.map((cor: any) => ({
+        name: cor.nome,
+        hex: cor.rgb_hex
+      })),
+      colorPaletteDestaque: openAIData.analise_colorimetrica.paleta_recomendada.cores_destaque.map((cor: any) => ({
+        name: cor.nome,
+        hex: cor.rgb_hex
+      })),
       season: openAIData.analise_colorimetrica.classificacao.estacao,
       seasonSubtype: openAIData.analise_colorimetrica.classificacao.subtipo,
       seasonTone: openAIData.analise_colorimetrica.classificacao.tom,
       seasonIntensity: openAIData.analise_colorimetrica.classificacao.intensidade,
       seasonSummary: openAIData.analise_colorimetrica.resumo_classificacao,
       generalSummary: openAIData.analise_colorimetrica.resumo_geral,
-      justification: openAIData.analise_colorimetrica.justificativa,
+      recommendationsSummary: openAIData.analise_colorimetrica.resumo_recomendacoes,
       characteristics: {
-        pele: anthropicData.Análise_Detalhada.a['Paleta de cores ideal'].pele,
-        olhos: anthropicData.Análise_Detalhada.a['Paleta de cores ideal'].olhos,
-        cabelo: anthropicData.Análise_Detalhada.a['Paleta de cores ideal'].cabelo,
+        pele: openAIData.analise_colorimetrica.caracteristicas.pele,
+        olhos: openAIData.analise_colorimetrica.caracteristicas.olhos,
+        cabelo: openAIData.analise_colorimetrica.caracteristicas.cabelo,
       },
       recommendations: {
         vestuario: openAIData.analise_colorimetrica.recomendacoes.vestuario,
@@ -82,7 +91,6 @@ export async function analyzeImage(imageUrl: string): Promise<ColorAnalysis> {
         cabelo: openAIData.analise_colorimetrica.recomendacoes.cabelo,
       },
       colorsToAvoid: openAIData.analise_colorimetrica.cores_evitar,
-      recommendationsSummary: openAIData.analise_colorimetrica.resumo_recomendacoes,
       exampleLooks: openAIData.analise_colorimetrica.exemplos_looks,
       makeupRoutine: openAIData.analise_colorimetrica.rotina_maquiagem,
       combinacoes_cores: openAIData.analise_colorimetrica.combinacoes_cores || [] // Adicionando esta linha
