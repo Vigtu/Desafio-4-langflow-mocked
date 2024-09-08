@@ -36,7 +36,7 @@ import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { toast } from "@/components/ui/use-toast"
 
-import { uploadImageToBytescale, analyzeImage } from '../api'
+import { uploadImage, analyze } from '../api'
 import { ColorAnalysis, APIRecommendation, NamedColor } from "@/api/types"
 import { usePreferences } from '@/hooks/usePreferences'
 import { getRecommendations } from '@/api/recommendationAPI'
@@ -205,14 +205,14 @@ export default function StyleflowApp() {
     setIsUploading(true)
     try {
       console.log('Iniciando processo de upload...');
-      const uploadResult = await uploadImageToBytescale(file)
+      const uploadResult = await uploadImage(file)
       console.log('Resultado do upload:', JSON.stringify(uploadResult, null, 2));
       const imageUrl = uploadResult.fileUrl
       setUploadedImageUrl(imageUrl)
       
       console.log('URL da imagem hospedada:', imageUrl);
 
-      const analysis = await analyzeImage(imageUrl)
+      const analysis = await analyze(imageUrl)
       console.log('Resultado da análise:', JSON.stringify(analysis, null, 2));
       setColorAnalysis(analysis)
 
