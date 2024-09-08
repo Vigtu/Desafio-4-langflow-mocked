@@ -1163,11 +1163,13 @@ export default function StyleflowApp() {
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
-            <img
-              src={selectedProduct?.image}
-              alt={selectedProduct?.name}
-              className="w-full h-64 object-cover rounded-lg"
-            />
+            <div className="w-full h-64 relative overflow-hidden rounded-lg bg-gray-100">
+              <img
+                src={selectedProduct?.image}
+                alt={selectedProduct?.name}
+                className="w-full h-full object-contain rounded-lg"
+              />
+            </div>
             <p className="text-2xl font-semibold text-[#d4af37]">
               R${selectedProduct?.price.toFixed(2)}
             </p>
