@@ -105,13 +105,22 @@ export default function StyleflowApp() {
   const [isTransitioning, setIsTransitioning] = useState(false)
   const [placeholderIndex, setPlaceholderIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const [isFocused, setIsFocused] = useState(false)
+
 
   const placeholders = [
     "Look casual para o escritório",
-    "Outfit para casamento, orçamento médio",
-    "Roupa elegante para jantar importante",
-    "Estilo confortável para viagem longa"
-  ]
+    "Outfit para casamento, orçamento médio de R$ 500",
+    "Roupa elegante para jantar importante até R$ 300",
+    "Estilo confortável para viagem longa",
+    "Visual despojado para fim de semana até R$ 250",
+    "Roupa formal para entrevista de emprego",
+    "Estilo casual chic para evento empresarial até R$ 400",
+    "Look confortável para passeio ao ar livre",
+    "Outfit estiloso para festa de aniversário",
+    "Roupa sofisticada para reunião de negócios até R$ 600"
+  ];
+  
 
   useEffect(() => {
     if (inputRef.current) {
@@ -120,7 +129,7 @@ export default function StyleflowApp() {
 
     const interval = setInterval(() => {
       setPlaceholderIndex((prevIndex) => (prevIndex + 1) % placeholders.length)
-    }, 5000)
+    }, 3500)
 
     return () => clearInterval(interval)
   }, [])
@@ -1031,12 +1040,28 @@ export default function StyleflowApp() {
                       <Input
                         ref={inputRef}
                         type="text"
-                        placeholder={placeholders[placeholderIndex]}
+                        placeholder=""
                         value={chatMessage}
                         onChange={(e) => setChatMessage(e.target.value)}
-                        className="pr-32 pl-6 py-8 text-xl rounded-full border-2 border-[#d4af37] focus:ring-2 focus:ring-[#8fbc8f] transition-all duration-300"
+                        onFocus={() => setIsFocused(true)}
+                        onBlur={() => setIsFocused(false)}
+                        className="pr-32 pl-6 py-6 text-xl rounded-full border-2 border-[#d4af37] focus:ring-2 focus:ring-[#8fbc8f] transition-all duration-300"
                         disabled={isChatSent}
                       />
+                      <AnimatePresence mode="wait">
+                        {!isFocused && chatMessage === '' && (
+                          <motion.span
+                            key={placeholderIndex}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 0.5, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.3, ease: [0.4, 0.0, 0.2, 1] }}
+                            className="absolute left-6 top-[25%] transform -translate-y-1/2 text-stone-400 pointer-events-none text-xl"
+                          >
+                            {placeholders[placeholderIndex]}
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
                       <Button
                         onClick={handleChatSend}
                         className="absolute right-2 top-1/2 transform -translate-y-1/2 px-6 bg-[#d4af37] hover:bg-[#b8963c] text-white text-lg rounded-full transition-all duration-300 h-[calc(100%-8px)]"
