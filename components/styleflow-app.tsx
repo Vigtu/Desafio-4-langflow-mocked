@@ -36,10 +36,9 @@ import { Progress } from "@/components/ui/progress"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { toast } from "@/components/ui/use-toast"
 
-import { uploadImage, analyze } from '../api'
+import { uploadImage, analyze, getRecommendations, tryOn } from '../api'
 import { ColorAnalysis, APIRecommendation, NamedColor } from "@/api/types"
 import { usePreferences } from '@/hooks/usePreferences'
-import { getRecommendations } from '@/api/recommendationAPI'
 import { mockImagesTryOn } from '@/utils/mockImagesTryOn'
 
 // Componente de loading simples
@@ -296,85 +295,82 @@ export default function StyleflowApp() {
         title: "Erro",
         description: "Imagem do usuário ou produto não disponível.",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
-    setShowVirtualTryOn(true)
-    setIsVirtualTryOnLoading(true)
+    setShowVirtualTryOn(true);
+    setIsVirtualTryOnLoading(true);
     try {
-      console.log("Simulando prova virtual com:", uploadedImageUrl, selectedProduct.image)
+      console.log("Iniciando prova virtual com:", uploadedImageUrl, selectedProduct.image);
       
-      // Simular um atraso de carregamento
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Determinar o grid com base no índice do produto selecionado
-      const gridIndex = apiRecommendations.findIndex(item => item === selectedProduct) + 1;
+      const tryOnResult = await tryOn(uploadedImageUrl, selectedProduct.image);
       
-      // Encontrar a imagem correspondente ao grid
-      const mockTryOnImage = mockImagesTryOn.find(item => item.grid === gridIndex);
-
-      if (mockTryOnImage) {
-        setVirtualTryOnImage(mockTryOnImage.image)
+      if (tryOnResult) {
+        setVirtualTryOnImage(tryOnResult);
         toast({
           title: "Prova virtual concluída",
           description: "Sua imagem de prova virtual está pronta!",
-        })
+        });
       } else {
-        throw new Error("Imagem de prova virtual não encontrada para este item.")
+        toast({
+          title: "Erro",
+          description: "Não foi possível gerar a imagem de prova virtual.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
-      console.error('Erro durante a prova virtual:', error)
+      console.error('Erro durante a prova virtual:', error);
       toast({
         title: "Erro",
         description: "Falha ao gerar a prova virtual. Por favor, tente novamente.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsVirtualTryOnLoading(false)
+      setIsVirtualTryOnLoading(false);
     }
-  }
+  };
 
   const handlePreferencesSubmit = async () => {
-    setIsLoading(true)
-    setPreferencesComplete(true)
-    const preferencesString = getPreferencesString()
-    console.log('Preferências do usuário:', preferencesString)
+    setIsLoading(true);
+    setPreferencesComplete(true);
+    const preferencesString = getPreferencesString();
+    console.log('Preferências do usuário:', preferencesString);
     
     try {
-      const filteredResponse = await getRecommendations(JSON.stringify(colorAnalysis), preferencesString)
-      console.log("Resposta filtrada da API de recomendações:", filteredResponse)
+      const filteredResponse = await getRecommendations(JSON.stringify(colorAnalysis), preferencesString);
+      console.log("Resposta filtrada da API de recomendações:", filteredResponse);
       
       // Processar a resposta e extrair as recomendações
-      const extractedRecommendations = extractRecommendationsFromResponse(filteredResponse)
+      const extractedRecommendations = extractRecommendationsFromResponse(filteredResponse);
       
       // Atualizar o estado com as novas recomendações
-      setApiRecommendations(extractedRecommendations)
+      setApiRecommendations(extractedRecommendations);
       
       if (extractedRecommendations.length > 0) {
-        setActiveTab('recommendations')
+        setActiveTab('recommendations');
         toast({
           title: "Recomendações prontas",
           description: `${extractedRecommendations.length} itens recomendados para você.`,
-        })
+        });
       } else {
         toast({
           title: "Sem recomendações",
           description: "Não foi possível gerar recomendações. Tente novamente.",
           variant: "destructive",
-        })
+        });
       }
     } catch (error) {
-      console.error('Erro ao gerar recomendações:', error)
+      console.error('Erro ao gerar recomendações:', error);
       toast({
         title: "Erro",
         description: "Falha ao gerar recomendações. Por favor, tente novamente.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const extractRecommendationsFromResponse = (response: any): APIRecommendation[] => {
     console.log("Resposta completa da API:", response)

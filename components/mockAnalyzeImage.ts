@@ -1,6 +1,7 @@
-import { ColorAnalysis } from '@/api/types';
+import { mockImagesTryOn } from '@/utils/mockImagesTryOn';
+import { ColorAnalysis, APIRecommendation } from '@/api/types';
 
-const USE_MOCK = true; // Defina como false para usar a API real
+const USE_MOCK = true;
 
 const mockAnalysis: ColorAnalysis = {
   colorPaletteNeutras: [
@@ -137,17 +138,123 @@ const mockAnalysis: ColorAnalysis = {
   combinacoes_cores: []
 };
 
+const mockRecommendations = {
+  "look_completo": {
+    "peca_principal": {
+      "nome": "Blusa em Chiffon com Decote V e Texturas",
+      "tipo": "Blusa",
+      "link": "https://www.lojasrenner.com.br/p/blusa-em-chiffon-com-decote-v-e-texturas/-/A-927676479-br.lr",
+      "imagem": "https://img.lojasrenner.com.br/item/927676508/original/12.jpg",
+      "preco": 159.9,
+      "cor": "Branco Neve",
+      "justificativa": "Escolhida por ser feita de um tecido leve e sofisticado, que complementa bem a paleta Outono Quente e oferece um contraste suave."
+    },
+    "peca_complementar": {
+      "nome": "Calça Flare em Alfaiataria com Barra Larga",
+      "tipo": "Calça",
+      "link": "https://www.lojasrenner.com.br/p/calca-flare-em-alfaiataria-com-barra-larga/-/A-927939494-br.lr",
+      "imagem": "https://img.lojasrenner.com.br/item/927939558/large/12.jpg",
+      "preco": 179.9,
+      "cor": "Marrom",
+      "justificativa": "A calça flare em marrom chocolate é uma peça versátil que complementa a blusa, mantendo a harmonia com a paleta Outono Quente."
+    },
+    "calcado": {
+      "nome": "Sapato Scarpin Slingback com Fivelas e Bico Fino",
+      "link": "https://www.lojasrenner.com.br/p/sapato-scarpin-slingback-com-fivelas-e-bico-fino/-/A-927872437-br.lr",
+      "imagem": "https://img.lojasrenner.com.br/item/927872470/original/5.jpg",
+      "preco": 179.9,
+      "cor": "Marrom",
+      "justificativa": "Escolhido por seu design elegante e cor neutra, que harmoniza com o resto do conjunto e é adequado para diversas ocasiões."
+    },
+    "acessorio": {
+      "nome": "Conjunto 02 Colares Corrente em Diferentes Formatos",
+      "link": "https://www.lojasrenner.com.br/p/conjunto-02-colares-corrente-em-diferentes-formatos/-/A-921046281-br.lr",
+      "imagem": "https://img.lojasrenner.com.br/item/921046290/original/4.jpg",
+      "preco": 49.9,
+      "cor": "Dourado",
+      "justificativa": "O colar dourado complementa a paleta Outono Quente e adiciona um toque de sofisticação ao look."
+    }
+  },
+  "alternativas": {
+    "alternativa_1": {
+      "nome": "Blusa Cropped em Tricô Decote Ombro a Ombro e Ponto Diferenciado",
+      "tipo": "Blusa",
+      "link": "https://www.lojasrenner.com.br/p/blusa-cropped-em-trico-decote-ombro-a-ombro-e-ponto-diferenciado/-/A-927759063-br.lr",
+      "imagem": "https://img.lojasrenner.com.br/item/927759135/original/12.jpg",
+      "preco": 69.9,
+      "cor": "Verde",
+      "justificativa": "Escolhida pela textura diferenciada e cor que harmoniza bem com a paleta Outono Quente."
+    },
+    "alternativa_2": {
+      "nome": "Bolsa Pequena em Palha com Bordados e Tàssel na Alça",
+      "tipo": "Bolsa",
+      "link": "https://www.lojasrenner.com.br/p/bolsa-pequena-em-palha-com-bordados-e-tassel-na-alca/-/A-927054506-COR927054506-CAMEL-AC.br.lr",
+      "imagem": "https://img.lojasrenner.com.br/item/927054522/original/5.jpg",
+      "preco": 159.9,
+      "cor": "Marrom",
+      "justificativa": "A bolsa de palha com detalhes em bordado complementa bem o look casual, adicionando textura e cor."
+    }
+  },
+  "visao_geral": "O look criado é harmonioso e versátil, ideal para o perfil Outono Quente. A blusa de chiffon e a calça flare em marrom proporcionam um visual elegante e sofisticado. O scarpin marrom e o colar dourado adicionam sofisticação e completam o conjunto. As alternativas escolhidas oferecem opções de peças com texturas e cores que continuam a enfatizar a paleta natural do usuário.",
+  "preco_total": 569.6
+};
+
 export async function mockAnalyzeImage(imageUrl: string): Promise<ColorAnalysis> {
   if (USE_MOCK) {
     console.log('Usando dados mock para análise de imagem');
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(mockAnalysis);
-      }, 1000); // Simula um atraso de 1 segundo
+      }, 1000);
     });
   } else {
     // Importa e chama a função real de análise de imagem
     const { analyzeImage } = await import('@/api/analyzeImage');
     return analyzeImage(imageUrl);
   }
+}
+
+export async function mockGetRecommendations(colorAnalysis: string, userPreferences: string): Promise<any> {
+  if (USE_MOCK) {
+    console.log('Usando dados mock para recomendações');
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(mockRecommendations);
+      }, 1000);
+    });
+  } else {
+    // Importa e chama a função real de recomendações
+    const { getRecommendations } = await import('@/api/recommendationAPI');
+    return getRecommendations(colorAnalysis, userPreferences);
+  }
+}
+
+export async function mockTryOnAPI(userImageUrl: string, productImageUrl: string): Promise<string> {
+  console.log('Usando dados mock para Try-On');
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      let gridNumber;
+      if (productImageUrl.includes('927676508')) gridNumber = 1; // Blusa em Chiffon
+      else if (productImageUrl.includes('927872470')) gridNumber = 2; // Sapato Scarpin
+      else if (productImageUrl.includes('921046290')) gridNumber = 3; // Conjunto de Colares
+      else if (productImageUrl.includes('927939558')) gridNumber = 4; // Calça Flare
+      else if (productImageUrl.includes('927759135')) gridNumber = 5; // Blusa Cropped
+      else if (productImageUrl.includes('927054522')) gridNumber = 6; // Bolsa Pequena
+      else {
+        console.log('Produto não reconhecido');
+        resolve('');
+        return;
+      }
+
+      const matchingImage = mockImagesTryOn.find(item => item.grid === gridNumber);
+
+      if (matchingImage) {
+        console.log(`Retornando imagem de try-on para grid ${gridNumber}: ${matchingImage.image}`);
+        resolve(matchingImage.image);
+      } else {
+        console.log(`Nenhuma imagem de try-on encontrada para grid ${gridNumber}`);
+        resolve('');
+      }
+    }, 1000);
+  });
 }
